@@ -459,3 +459,121 @@ async def get_provision_job(request: Request, job_id: int, db: AsyncSession = De
         "finished_at": job.finished_at.isoformat() if job.finished_at else None,
         "triggered_by": job.triggered_by,
     })
+
+
+@router.post("/server/{server_id}/run-backup")
+async def run_backup(request: Request, server_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Server).where(Server.id == server_id))
+    server = result.scalar_one_or_none()
+    if not server:
+        return JSONResponse({"error": "Server not found"}, status_code=404)
+    if not server.ssh_host or not server.ssh_key_encrypted:
+        return JSONResponse({"error": "Server has no SSH credentials"}, status_code=400)
+
+    username = request.session.get("username", "unknown")
+    job = ProvisioningJob(server_id=server_id, job_type="backup", status="queued", triggered_by=username)
+    db.add(job)
+    await db.commit()
+    await db.refresh(job)
+
+    await write_audit_log(db, actor=username, action="run_backup", server_id=server_id)
+    await db.commit()
+
+    _run_ssh_script(server, job.id, "oa-backup.sh", timeout=600)
+    return JSONResponse({"job_id": str(job.id), "status": "queued"})
+
+
+@router.post("/server/{server_id}/run-patch-self-test")
+async def run_patch_self_test(request: Request, server_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Server).where(Server.id == server_id))
+    server = result.scalar_one_or_none()
+    if not server:
+        return JSONResponse({"error": "Server not found"}, status_code=404)
+    if not server.ssh_host or not server.ssh_key_encrypted:
+        return JSONResponse({"error": "Server has no SSH credentials"}, status_code=400)
+
+    username = request.session.get("username", "unknown")
+    job = ProvisioningJob(server_id=server_id, job_type="patch_self_test", status="queued", triggered_by=username)
+    db.add(job)
+    await db.commit()
+    await db.refresh(job)
+
+    await write_audit_log(db, actor=username, action="run_patch_self_test", server_id=server_id)
+    await db.commit()
+
+    _run_ssh_script(server, job.id, "oa-patch-known-issues.sh", args="--self-test", timeout=300)
+    return JSONResponse({"job_id": str(job.id), "status": "queued"})
+
+
+@router.post("/server/{server_id}/backup-list")
+async def get_backup_list(request: Request, server_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Server).where(Server.id == server_id))
+    server = result.scalar_one_or_none()
+    if not server:
+        return JSONResponse({"error": "Server not found"}, status_code=404)
+    if not server.ssh_host or not server.ssh_key_encrypted:
+        return JSONResponse({"error": "Server has no SSH credentials"}, status_code=400)
+
+    username = request.session.get("username", "unknown")
+    job = ProvisioningJob(server_id=server_id, job_type="backup_list", status="queued", triggered_by=username)
+    db.add(job)
+    await db.commit()
+    await db.refresh(job)
+
+    await write_audit_log(db, actor=username, action="backup_list", server_id=server_id)
+    await db.commit()
+
+    _run_ssh_script(server, job.id, "oa-backup.sh", args="list", timeout=30)
+    return JSONResponse({"job_id": str(job.id), "status": "queued"})
+
+
+def _run_ssh_script(server: Server, job_id: int, script: str, args: str = "", timeout: int = 300):
+    from app.config import DATABASE_URL
+    from app.services.ssh_client import SSHClient
+
+    def _run():
+        import asyncio
+        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+        engine = create_async_engine(DATABASE_URL, echo=False)
+        factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+        async def _inner():
+            async with factory() as db:
+                j = (await db.execute(select(ProvisioningJob).where(ProvisioningJob.id == job_id))).scalar_one_or_none()
+                if j:
+                    j.status = "running"; j.started_at = datetime.now(timezone.utc)
+                    j.log_text = f"Connecting via SSH to run {script}..." if not args else f"Connecting via SSH to run {script} {args}..."
+                    await db.commit()
+
+            ssh = None
+            try:
+                ssh = SSHClient(
+                    host=server.ssh_host, port=server.ssh_port, username=server.ssh_user,
+                    private_key_pem=decrypt_value(server.ssh_key_encrypted), host_key=server.ssh_host_key,
+                )
+                ssh.connect()
+                exit_code, output = ssh.run_script(script, args=args, timeout=timeout)
+
+                async with factory() as db:
+                    j = (await db.execute(select(ProvisioningJob).where(ProvisioningJob.id == job_id))).scalar_one_or_none()
+                    if j:
+                        j.status = "success" if exit_code == 0 else "failed"
+                        j.log_text = output; j.finished_at = datetime.now(timezone.utc)
+                        await db.commit()
+
+            except Exception as e:
+                async with factory() as db:
+                    j = (await db.execute(select(ProvisioningJob).where(ProvisioningJob.id == job_id))).scalar_one_or_none()
+                    if j:
+                        j.status = "failed"; j.log_text = f"SSH error: {e}"; j.finished_at = datetime.now(timezone.utc)
+                        await db.commit()
+            finally:
+                if ssh:
+                    try:
+                        ssh.close()
+                    except Exception:
+                        pass
+
+        asyncio.run(_inner())
+
+    Thread(target=_run, daemon=True).start()

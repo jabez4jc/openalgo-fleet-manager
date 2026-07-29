@@ -31,9 +31,31 @@ SESSION_SECRET=$SESSION_SECRET
 FLEET_ADMIN_BOOTSTRAP_PASSWORD=$BOOTSTRAP_PW
 SCRIPTS_REF=main
 POLL_INTERVAL_SECONDS=60
+ALERT_WEBHOOK_URL=
 EOF
 
 echo ""
+echo "--- SSH Keypair for Fleet Manager ---"
+echo "It is recommended to use a dedicated SSH key for the Fleet Manager."
+echo "This key should be added to each managed server's authorized_keys."
+read -rp "Generate a dedicated SSH keypair? [Y/n]: " GEN_KEY
+if [[ "$GEN_KEY" != "n" && "$GEN_KEY" != "N" ]]; then
+    KEY_DIR="$SCRIPT_DIR/ssh-keys"
+    mkdir -p "$KEY_DIR"
+    ssh-keygen -t ed25519 -f "$KEY_DIR/id_ed25519" -N "" -C "fleet-manager-$(hostname)" -q
+    echo ""
+    echo "[✓] SSH keypair generated:"
+    echo "    Private: $KEY_DIR/id_ed25519"
+    echo "    Public:  $KEY_DIR/id_ed25519.pub"
+    echo ""
+    echo "Add this public key to each server you manage:"
+    echo ""
+    echo "  ssh-copy-id -i $KEY_DIR/id_ed25519.pub ubuntu@<server-ip>"
+    echo ""
+    echo "Onboard new servers via the Provisioning Wizard and paste the"
+    echo "contents of $KEY_DIR/id_ed25519 as the SSH private key."
+fi
+
 echo "[✓] .env written to $ENV_FILE"
 echo ""
 echo "To start:  docker compose up -d"

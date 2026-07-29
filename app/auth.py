@@ -1,3 +1,7 @@
+import time
+from collections import defaultdict
+from threading import Lock
+
 from fastapi import Request, HTTPException, Depends, Response
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +14,41 @@ from app.config import FLEET_ADMIN_BOOTSTRAP_PASSWORD
 
 SESSION_COOKIE = "fm_session"
 EXEMPT_PATHS = {"/login", "/login-submit", "/health"}
+
+MAX_LOGIN_ATTEMPTS = 5
+LOGIN_LOCKOUT_SECONDS = 900
+
+_login_attempts: dict[str, list[float]] = defaultdict(list)
+_login_attempts_lock = Lock()
+
+
+def _rate_limit_key(username: str, ip: str) -> str:
+    return f"{username}|{ip}"
+
+
+def check_rate_limit(username: str, ip: str) -> bool:
+    key = _rate_limit_key(username, ip)
+    now = time.time()
+    with _login_attempts_lock:
+        attempts = _login_attempts[key]
+        attempts = [t for t in attempts if now - t < LOGIN_LOCKOUT_SECONDS]
+        _login_attempts[key] = attempts
+        if len(attempts) >= MAX_LOGIN_ATTEMPTS:
+            return False
+        return True
+
+
+def record_failed_attempt(username: str, ip: str):
+    key = _rate_limit_key(username, ip)
+    now = time.time()
+    with _login_attempts_lock:
+        _login_attempts[key].append(now)
+
+
+def clear_rate_limit(username: str, ip: str):
+    key = _rate_limit_key(username, ip)
+    with _login_attempts_lock:
+        _login_attempts.pop(key, None)
 
 
 def _is_exempt(path: str) -> bool:

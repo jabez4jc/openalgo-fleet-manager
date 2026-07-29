@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Server, Instance
 from app.encryption import decrypt_value
 from app.services.admin_api import AdminAPISession
+from app.config import ALERT_WEBHOOK_URL
 
 logger = logging.getLogger("fleetmgr.poller")
 
@@ -101,6 +102,9 @@ async def poll_all_servers(db: AsyncSession):
     result = await db.execute(select(Server))
     servers = result.scalars().all()
     logger.info("Polling %d servers", len(servers))
+
+    critical_alerts = []
+
     for server in servers:
         if not server.admin_username or not server.admin_password_encrypted:
             logger.debug("Skipping server %s: no admin credentials", server.name)
@@ -109,3 +113,36 @@ async def poll_all_servers(db: AsyncSession):
             await poll_server(server, db)
         except Exception as e:
             logger.error("Poll failed for server %s: %s", server.name, e)
+
+    await db.commit()
+
+    for server in servers:
+        for inst in server.instances:
+            if inst.health_status in ("critical", "unreachable"):
+                critical_alerts.append({
+                    "server": server.name,
+                    "instance": inst.instance_name,
+                    "domain": inst.domain,
+                    "health_status": inst.health_status,
+                    "status": inst.status,
+                    "last_polled": inst.last_polled_at.isoformat() if inst.last_polled_at else None,
+                })
+
+    if critical_alerts and ALERT_WEBHOOK_URL:
+        _send_alert(critical_alerts)
+
+
+def _send_alert(critical_instances: list[dict]):
+    try:
+        import httpx
+        payload = {
+            "service": "openalgo-fleet-manager",
+            "severity": "critical",
+            "message": f"{len(critical_instances)} instance(s) in critical/unreachable state",
+            "instances": critical_instances,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        resp = httpx.post(ALERT_WEBHOOK_URL, json=payload, timeout=15)
+        logger.info("Alert sent to webhook: %s", resp.status_code)
+    except Exception as e:
+        logger.error("Failed to send alert: %s", e)

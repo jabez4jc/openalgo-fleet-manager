@@ -10,6 +10,7 @@ services:
       FLEET_ADMIN_BOOTSTRAP_PASSWORD: ${FLEET_ADMIN_BOOTSTRAP_PASSWORD:-}
       SCRIPTS_REF: ${SCRIPTS_REF:-main}
       POLL_INTERVAL_SECONDS: ${POLL_INTERVAL_SECONDS:-60}
+      ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}
     restart: unless-stopped
     networks:
       - coolify

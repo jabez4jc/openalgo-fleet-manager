@@ -6,7 +6,7 @@ from sqlalchemy import select
 from app.database import get_db
 from app.models import FleetUser
 from app.encryption import verify_password, hash_password, create_session, validate_session, destroy_session
-from app.auth import SESSION_COOKIE, check_bootstrap, bootstrap_admin
+from app.auth import SESSION_COOKIE, check_bootstrap, bootstrap_admin, check_rate_limit, record_failed_attempt, clear_rate_limit
 from app.services.audit import write_audit_log
 
 router = APIRouter(tags=["auth"])
@@ -73,6 +73,16 @@ async def login_submit(
     next: str = Form("/"),
     db: AsyncSession = Depends(get_db),
 ):
+    client_ip = request.client.host if request.client else "unknown"
+
+    if not check_rate_limit(username, client_ip):
+        html = LOGIN_TEMPLATE.format(
+            error_html='<div class="login-error">Too many failed attempts. Try again in 15 minutes.</div>',
+            info_html='',
+            next_path=_esc(next),
+        )
+        return HTMLResponse(content=html, status_code=429)
+
     result = await db.execute(select(FleetUser).where(FleetUser.username == username))
     user = result.scalar_one_or_none()
 
@@ -89,12 +99,15 @@ async def login_submit(
         return HTMLResponse(content=html)
 
     if not user or not verify_password(password, user.password_hash):
+        record_failed_attempt(username, client_ip)
         html = LOGIN_TEMPLATE.format(
             error_html='<div class="login-error">Invalid username or password.</div>',
             info_html='',
             next_path=_esc(next),
         )
         return HTMLResponse(content=html, status_code=401)
+
+    clear_rate_limit(username, client_ip)
 
     token = create_session()
     request.session["user_id"] = user.id

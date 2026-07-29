@@ -216,6 +216,11 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
 <button class="btn btn-sm" onclick="actionUpdateAll()">Update All</button>
 <button class="btn btn-sm btn-danger" onclick="actionReboot()">Reboot Server</button>
 </div>
+<div style="padding:8px 20px 16px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--border-soft)">
+<button class="btn btn-sm" onclick="actionBackup()">Run Backup</button>
+<button class="btn btn-sm" onclick="actionBackupList()">Backup List</button>
+<button class="btn btn-sm" onclick="actionPatchSelfTest()">Patch Self-Test</button>
+</div>
 </div>
 """
 
@@ -320,6 +325,34 @@ if(!confirm('REBOOT the entire server? This will take all instances offline.'))r
 if(!confirm('Are you sure? A reboot will restart the entire operating system.'))return;
 const d=await apiCall('/reboot-server');
 showActionPanel('Reboot Server',d);
+}}
+async function actionBackup(){{
+if(!confirm('Run backup on this server via SSH?'))return;
+showActionPanel('Backup',{{job_id:'pending'}});
+const r=await fetch('/provision/server/'+serverId+'/run-backup',{{method:'POST'}});
+const d=await r.json();
+if(d.job_id)pollProvJob(d.job_id,showActionPanel);
+}}
+async function actionBackupList(){{
+showActionPanel('Backup List',{{job_id:'pending'}});
+const r=await fetch('/provision/server/'+serverId+'/backup-list',{{method:'POST'}});
+const d=await r.json();
+if(d.job_id)pollProvJob(d.job_id,showActionPanel);
+}}
+async function actionPatchSelfTest(){{
+if(!confirm('Run oa-patch-known-issues.sh --self-test on this server?'))return;
+showActionPanel('Patch Self-Test',{{job_id:'pending'}});
+const r=await fetch('/provision/server/'+serverId+'/run-patch-self-test',{{method:'POST'}});
+const d=await r.json();
+if(d.job_id)pollProvJob(d.job_id,showActionPanel);
+}}
+async function pollProvJob(jobId,showFn){{
+try{{
+const r=await fetch('/provision/jobs/'+jobId);
+const d=await r.json();
+showFn(d.job_type||'Job',d);
+if(d.status==='running'||d.status==='queued')setTimeout(()=>pollProvJob(jobId,showFn),2000);
+}}catch(e){{showFn('Error',{{error:e.message}});}}
 }}
 </script>
 """
