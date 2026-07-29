@@ -1,17 +1,18 @@
 import json
 import logging
+import secrets
 from datetime import datetime, timezone
 from threading import Thread
 
-from fastapi import APIRouter, Request, Depends, Form
+from fastapi import APIRouter, Request, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.database import get_db
-from app.models import Server, ProvisioningJob
-from app.encryption import decrypt_value
-from app.config import SCRIPTS_REPO_PATH
+from app.models import Server, Instance, ProvisioningJob
+from app.encryption import decrypt_value, encrypt_value
+from app.config import SCRIPTS_REPO_PATH, SCRIPTS_REPO_URL, SCRIPTS_REF
 from app.services.ssh_client import SSHClient
 from app.services.audit import write_audit_log
 from app.routers.dashboard_router import BASE_TEMPLATE_START, BASE_TEMPLATE_END
@@ -30,7 +31,6 @@ VALID_BROKERS = [
 XTS_BROKERS = ["fivepaisaxts", "compositedge", "ibulls", "iifl", "jainamxts", "rmoney", "wisdom"]
 
 
-
 @router.get("", response_class=HTMLResponse)
 async def provisioning_page(request: Request, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Server).order_by(Server.name))
@@ -41,39 +41,39 @@ async def provisioning_page(request: Request, db: AsyncSession = Depends(get_db)
     html += """
 <div class="card">
 <div class="card-head"><h2>Provisioning Wizard</h2></div>
-"""
-    if not servers_with_ssh:
-        html += '<div class="empty-state">No servers with SSH configured.<br>Add a server with SSH credentials first from the <a href="/servers/add" style="color:var(--accent)">Servers page</a>.</div>'
-    else:
-        html += """
 <div style="padding:20px">
 <form id="provision-form" onsubmit="submitProvision(event)">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
 <div>
-<label>Target Server</label>
-<select name="server_id" id="prov-server" required style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<option value="">Select server...</option>
-"""
-        for srv in servers_with_ssh:
-            html += f'<option value="{srv.id}">{srv.name} ({srv.ssh_host})</option>'
-        html += """
-</select>
 <label>Provisioning Type</label>
 <select name="job_type" id="prov-type" onchange="toggleFormFields()" required style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
 <option value="">Select type...</option>
 <option value="new_instance">Add Instance to Existing Server</option>
+<option value="new_server">Onboard New Server</option>
 </select>
 </div>
 <div id="instance-fields">
+"""
+    if servers_with_ssh:
+        html += '<label>Target Server</label>'
+        html += '<select name="server_id" id="prov-server" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">'
+        html += '<option value="">Select server...</option>'
+        for srv in servers_with_ssh:
+            html += f'<option value="{srv.id}">{srv.name} ({srv.ssh_host})</option>'
+        html += '</select>'
+    else:
+        html += '<div style="color:var(--text-faint);font-size:13px;margin-bottom:14px">No servers with SSH configured yet. Use "Onboard New Server" below.</div>'
+        html += '<input type="hidden" name="server_id" value="0">'
+    html += """
 <label>Instance Domain</label>
 <input type="text" name="domain" id="prov-domain" placeholder="trade1.example.com" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
 <label>Broker</label>
-<select name="broker" id="prov-broker" onchange="toggleXtsFields()" required style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
+<select name="broker" id="prov-broker" onchange="toggleXtsFields()" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
 <option value="">Select broker...</option>
 """
-        for b in VALID_BROKERS:
-            html += f'<option value="{b}">{b}</option>'
-        html += """
+    for b in VALID_BROKERS:
+        html += f'<option value="{b}">{b}</option>'
+    html += """
 </select>
 <label>API Key</label>
 <input type="text" name="api_key" id="prov-api-key" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
@@ -86,12 +86,27 @@ async def provisioning_page(request: Request, db: AsyncSession = Depends(get_db)
 <input type="password" name="market_secret" id="prov-market-secret" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
 </div>
 </div>
+<div id="server-fields" style="display:none">
+<h3 style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text)">New Server SSH Access</h3>
+<label>Server Name</label>
+<input type="text" name="server_name" id="prov-server-name" placeholder="prod-us-east-1" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
+<label>SSH Host</label>
+<input type="text" name="ssh_host" id="prov-ssh-host" placeholder="192.168.1.100" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
+<label>SSH Port</label>
+<input type="number" name="ssh_port" id="prov-ssh-port" value="22" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
+<label>SSH User</label>
+<input type="text" name="ssh_user" id="prov-ssh-user" value="ubuntu" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
+<label>SSH Private Key</label>
+<textarea name="ssh_key" id="prov-ssh-key" rows="5" placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;..." style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:12px;font-family:var(--mono);resize:vertical"></textarea>
+<label>Host Public Key <span style="color:var(--text-faint)">(optional, pin for security)</span></label>
+<input type="text" name="host_key" id="prov-host-key" placeholder="ssh-ed25519 AAAAC3... or leave blank to auto-accept" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:12px;font-family:var(--mono)">
+</div>
 </div>
 <div style="margin-top:4px;padding:12px;background:var(--danger-soft);border:1px solid rgba(244,88,110,.35);border-radius:var(--radius-sm);font-size:13px;color:var(--danger)">
 <strong>Warning:</strong> This runs root-level scripts on the remote server. Broker API secrets will be written to a temp file on the remote machine briefly. Confirm before proceeding.
 </div>
 <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
-<button type="submit" class="btn btn-accent" onclick="return confirm('Provision this instance on the target server? This runs root-level scripts and will write broker secrets to a temp file on the remote server.')">Provision</button>
+<button type="submit" class="btn btn-accent">Provision</button>
 </div>
 </form>
 <div id="prov-result" style="margin-top:16px;display:none">
@@ -99,12 +114,12 @@ async def provisioning_page(request: Request, db: AsyncSession = Depends(get_db)
 <div id="prov-log" class="job-log-viewer"></div>
 </div>
 </div>
-"""
-    html += """
+</div>
 <script>
 function toggleFormFields(){
 const type=document.getElementById('prov-type').value;
-document.getElementById('instance-fields').style.display=type==='new_instance'?'block':'none';
+document.getElementById('instance-fields').style.display=type==='new_instance'||type==='new_server'?'block':'none';
+document.getElementById('server-fields').style.display=type==='new_server'?'block':'none';
 }
 function toggleXtsFields(){
 const broker=document.getElementById('prov-broker').value;
@@ -113,19 +128,21 @@ document.getElementById('xts-fields').style.display=xtsBrokers.includes(broker)?
 }
 async function submitProvision(e){
 e.preventDefault();
-if(!confirm('Provision this instance on the target server? This runs root-level scripts and will write broker secrets to a temp file on the remote server.'))return;
-
+const type=document.getElementById('prov-type').value;
+let msg='';
+if(type==='new_instance')msg='Provision a new instance on an existing server? This runs multi-install.sh remotely.';
+else if(type==='new_server')msg='Onboard a new server? This will install dependencies, set up the first instance, and configure the admin API.';
+else return alert('Select a provisioning type');
+if(!confirm(msg))return;
 const form=e.target;
 const fd=new FormData(form);
 const data=Object.fromEntries(fd.entries());
-
 const resultEl=document.getElementById('prov-result');
 const logEl=document.getElementById('prov-log');
 const titleEl=document.getElementById('prov-result-title');
 resultEl.style.display='block';
-titleEl.textContent='Starting provisioning...';
+titleEl.textContent='Starting...';
 logEl.textContent='Submitting...';
-
 try{
 const r=await fetch('/provision/submit',{
 method:'POST',
@@ -133,17 +150,10 @@ headers:{'Content-Type':'application/json'},
 body:JSON.stringify(data)
 });
 const d=await r.json();
-if(d.error){
-logEl.textContent='Error: '+d.error;
-titleEl.textContent='Failed';
-return;
-}
+if(d.error){logEl.textContent='Error: '+d.error;titleEl.textContent='Failed';return;}
 titleEl.textContent='Job #'+d.job_id+' - '+d.status;
 pollProvJob(d.job_id,logEl,titleEl);
-}catch(e){
-logEl.textContent='Error: '+e.message;
-titleEl.textContent='Failed';
-}
+}catch(e){logEl.textContent='Error: '+e.message;titleEl.textContent='Failed';}
 }
 async function pollProvJob(jobId,logEl,titleEl){
 try{
@@ -151,23 +161,18 @@ const r=await fetch('/provision/jobs/'+jobId);
 const d=await r.json();
 logEl.textContent=d.log_text||d.status||'';
 titleEl.textContent='Job #'+jobId+' - '+d.status;
-if(d.status==='running'||d.status==='queued'){
-setTimeout(()=>pollProvJob(jobId,logEl,titleEl),2000);
-}
-}catch(e){
-logEl.textContent='Poll error: '+e.message;
-}
+if(d.status==='running'||d.status==='queued')setTimeout(()=>pollProvJob(jobId,logEl,titleEl),2000);
+}catch(e){logEl.textContent='Poll error: '+e.message;}
 }
 </script>
 """
-    html += '</div>' + BASE_TEMPLATE_END
+    html += BASE_TEMPLATE_END
     return HTMLResponse(content=html)
 
 
 @router.post("/submit")
 async def submit_provision(request: Request, db: AsyncSession = Depends(get_db)):
     body = await request.json()
-    server_id = int(body.get("server_id", 0))
     job_type = body.get("job_type", "")
     domain = body.get("domain", "")
     broker = body.get("broker", "")
@@ -176,24 +181,70 @@ async def submit_provision(request: Request, db: AsyncSession = Depends(get_db))
     market_key = body.get("market_key", "")
     market_secret = body.get("market_secret", "")
 
-    if job_type not in ("new_instance",):
+    if job_type not in ("new_instance", "new_server"):
         return JSONResponse({"error": "Invalid job_type"}, status_code=400)
-
-    result = await db.execute(select(Server).where(Server.id == server_id))
-    server = result.scalar_one_or_none()
-    if not server:
-        return JSONResponse({"error": "Server not found"}, status_code=404)
-
-    if not server.ssh_host or not server.ssh_key_encrypted:
-        return JSONResponse({"error": "Server has no SSH credentials"}, status_code=400)
 
     if not domain or not broker:
         return JSONResponse({"error": "Domain and broker are required"}, status_code=400)
-
     if broker not in VALID_BROKERS:
         return JSONResponse({"error": f"Invalid broker: {broker}"}, status_code=400)
 
     username = request.session.get("username", "unknown")
+    admin_pw = secrets.token_urlsafe(16)
+
+    if job_type == "new_server":
+        server_name = body.get("server_name", "").strip()
+        ssh_host = body.get("ssh_host", "").strip()
+        ssh_port = int(body.get("ssh_port", 22))
+        ssh_user = body.get("ssh_user", "").strip()
+        ssh_key_pem = body.get("ssh_key", "").strip()
+        host_key = body.get("host_key", "").strip() or None
+
+        if not server_name or not ssh_host or not ssh_user or not ssh_key_pem:
+            return JSONResponse({"error": "Server name, SSH host, user, and private key are required"}, status_code=400)
+
+        base_url = f"https://{domain}:8888"
+
+        server = Server(
+            name=server_name,
+            base_url=base_url,
+            ssh_host=ssh_host,
+            ssh_port=ssh_port,
+            ssh_user=ssh_user,
+            ssh_key_encrypted=encrypt_value(ssh_key_pem),
+            ssh_host_key=host_key,
+        )
+        db.add(server)
+        await db.flush()
+        await db.refresh(server)
+
+        job = ProvisioningJob(
+            server_id=server.id,
+            job_type=job_type,
+            params_json=json.dumps({"domain": domain, "broker": broker, "server_name": server_name}),
+            status="queued",
+            triggered_by=username,
+        )
+        db.add(job)
+        await db.commit()
+        await db.refresh(job)
+
+        instance_name = domain.split(".")[0] if "." in domain else domain
+
+        await write_audit_log(db, actor=username, action="provision_new_server", server_id=server.id, instance_name=domain,
+                              detail={"server_name": server_name, "broker": broker})
+        await db.commit()
+
+        _run_new_server(server, job.id, admin_pw, domain, broker, api_key, api_secret, market_key, market_secret, instance_name)
+        return JSONResponse({"job_id": str(job.id), "status": "queued", "server_id": server.id})
+
+    server_id = int(body.get("server_id", 0))
+    result = await db.execute(select(Server).where(Server.id == server_id))
+    server = result.scalar_one_or_none()
+    if not server:
+        return JSONResponse({"error": "Server not found"}, status_code=404)
+    if not server.ssh_host or not server.ssh_key_encrypted:
+        return JSONResponse({"error": "Server has no SSH credentials"}, status_code=400)
 
     job = ProvisioningJob(
         server_id=server_id,
@@ -206,12 +257,18 @@ async def submit_provision(request: Request, db: AsyncSession = Depends(get_db))
     await db.commit()
     await db.refresh(job)
 
-    await write_audit_log(db, actor=username, action=f"provision_{job_type}", server_id=server_id, instance_name=domain, detail={"broker": broker})
+    await write_audit_log(db, actor=username, action="provision_new_instance", server_id=server_id, instance_name=domain,
+                          detail={"broker": broker})
     await db.commit()
 
-    config_lines = [
+    _run_new_instance(server, job.id, admin_pw, domain, broker, api_key, api_secret, market_key, market_secret)
+    return JSONResponse({"job_id": str(job.id), "status": "queued"})
+
+
+def _make_config_content(domain: str, broker: str, api_key: str, api_secret: str, market_key: str, market_secret: str) -> str:
+    lines = [
         "CHANGE_TZ=y",
-        f"BRANCH=main",
+        "BRANCH=main",
         "INSTANCES=1",
         f"INSTANCE_1_DOMAIN={domain}",
         f"INSTANCE_1_BROKER={broker}",
@@ -219,85 +276,66 @@ async def submit_provision(request: Request, db: AsyncSession = Depends(get_db))
         f"INSTANCE_1_API_SECRET={api_secret}",
     ]
     if broker in XTS_BROKERS:
-        config_lines.append(f"INSTANCE_1_MARKET_KEY={market_key}")
-        config_lines.append(f"INSTANCE_1_MARKET_SECRET={market_secret}")
-    config_content = "\n".join(config_lines) + "\n"
+        lines.append(f"INSTANCE_1_MARKET_KEY={market_key}")
+        lines.append(f"INSTANCE_1_MARKET_SECRET={market_secret}")
+    return "\n".join(lines) + "\n"
 
-    remote_config_path = f"/tmp/instance-{job.id}.env"
-    multi_install_cmd = f"sudo bash {SCRIPTS_REPO_PATH}/multi-install.sh --config {remote_config_path}"
-    cleanup_cmd = f"shred -u {remote_config_path} 2>/dev/null || rm -f {remote_config_path}"
 
+def _run_new_instance(server: Server, job_id: int, admin_pw: str, domain: str, broker: str,
+                      api_key: str, api_secret: str, market_key: str, market_secret: str):
     from app.config import DATABASE_URL
 
-    def _run_prep_and_start():
+    instance_name = domain.split(".")[0] if "." in domain else domain
+    config_content = _make_config_content(domain, broker, api_key, api_secret, market_key, market_secret)
+    remote_config_path = f"/tmp/instance-{job_id}.env"
+    multi_install_cmd = f"sudo bash {SCRIPTS_REPO_PATH}/multi-install.sh --config {remote_config_path}"
+
+    def _run():
         import asyncio
-        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
         engine = create_async_engine(DATABASE_URL, echo=False)
         factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
-        async def _run():
-            async with factory() as db2:
-                result2 = await db2.execute(select(ProvisioningJob).where(ProvisioningJob.id == job.id))
-                j = result2.scalar_one_or_none()
-                if not j:
-                    return
-                j.status = "running"
-                j.started_at = datetime.now(timezone.utc)
-                j.log_text = "Connecting via SSH..."
-                await db2.commit()
+        async def _inner():
+            async with factory() as db:
+                j = (await db.execute(select(ProvisioningJob).where(ProvisioningJob.id == job_id))).scalar_one_or_none()
+                if j:
+                    j.status = "running"; j.started_at = datetime.now(timezone.utc)
+                    j.log_text = "Connecting via SSH..."; await db.commit()
 
             ssh = None
             try:
                 ssh = SSHClient(
-                    host=server.ssh_host,
-                    port=server.ssh_port,
-                    username=server.ssh_user,
-                    private_key_pem=decrypt_value(server.ssh_key_encrypted),
-                    host_key=server.ssh_host_key,
+                    host=server.ssh_host, port=server.ssh_port, username=server.ssh_user,
+                    private_key_pem=decrypt_value(server.ssh_key_encrypted), host_key=server.ssh_host_key,
                 )
                 ssh.connect()
-
-                async with factory() as db3:
-                    result3 = await db3.execute(select(ProvisioningJob).where(ProvisioningJob.id == job.id))
-                    j3 = result3.scalar_one_or_none()
-                    if j3:
-                        j3.log_text = "Writing config file..."
-                        await db3.commit()
+                await _update_job(job_id, factory, "Writing config file on remote server...")
 
                 ssh.write_temp_file(config_content, remote_config_path)
-
-                async with factory() as db4:
-                    result4 = await db4.execute(select(ProvisioningJob).where(ProvisioningJob.id == job.id))
-                    j4 = result4.scalar_one_or_none()
-                    if j4:
-                        j4.log_text = "Syncing scripts repo and running multi-install.sh..."
-                        await db4.commit()
+                await _update_job(job_id, factory, "Syncing scripts repo and running multi-install.sh...")
 
                 exit_code, output = ssh.git_sync_then_invoke(multi_install_cmd, timeout=1800)
+                ssh.delete_temp_file(remote_config_path)
 
-                try:
-                    ssh._run(cleanup_cmd, timeout=10)
-                except Exception:
-                    pass
-
-                async with factory() as db5:
-                    result5 = await db5.execute(select(ProvisioningJob).where(ProvisioningJob.id == job.id))
-                    j5 = result5.scalar_one_or_none()
-                    if j5:
-                        j5.status = "success" if exit_code == 0 else "failed"
-                        j5.log_text = output
-                        j5.finished_at = datetime.now(timezone.utc)
-                        await db5.commit()
+                async with factory() as db:
+                    j = (await db.execute(select(ProvisioningJob).where(ProvisioningJob.id == job_id))).scalar_one_or_none()
+                    if j:
+                        if exit_code == 0:
+                            j.status = "success"; j.log_text = output; j.finished_at = datetime.now(timezone.utc)
+                            inst = Instance(server_id=server.id, instance_name=instance_name, domain=domain,
+                                           broker=broker, status="provisioned", health_status="pending")
+                            db.add(inst)
+                        else:
+                            j.status = "failed"; j.log_text = output; j.finished_at = datetime.now(timezone.utc)
+                        await db.commit()
 
             except Exception as e:
-                async with factory() as db6:
-                    result6 = await db6.execute(select(ProvisioningJob).where(ProvisioningJob.id == job.id))
-                    j6 = result6.scalar_one_or_none()
-                    if j6:
-                        j6.status = "failed"
-                        j6.log_text = f"SSH error: {e}"
-                        j6.finished_at = datetime.now(timezone.utc)
-                        await db6.commit()
+                async with factory() as db:
+                    j = (await db.execute(select(ProvisioningJob).where(ProvisioningJob.id == job_id))).scalar_one_or_none()
+                    if j:
+                        j.status = "failed"; j.log_text = f"SSH error: {e}"; j.finished_at = datetime.now(timezone.utc)
+                        await db.commit()
             finally:
                 if ssh:
                     try:
@@ -305,11 +343,105 @@ async def submit_provision(request: Request, db: AsyncSession = Depends(get_db))
                     except Exception:
                         pass
 
-        asyncio.run(_run())
+        asyncio.run(_inner())
 
-    Thread(target=_run_prep_and_start, daemon=True).start()
+    Thread(target=_run, daemon=True).start()
 
-    return JSONResponse({"job_id": str(job.id), "status": "queued"})
+
+def _run_new_server(server: Server, job_id: int, admin_pw: str, domain: str, broker: str,
+                    api_key: str, api_secret: str, market_key: str, market_secret: str, instance_name: str):
+    from app.config import DATABASE_URL
+
+    config_content = _make_config_content(domain, broker, api_key, api_secret, market_key, market_secret)
+    remote_config_path = f"/tmp/bootstrap-{job_id}.env"
+    multi_install_cmd = f"sudo bash {SCRIPTS_REPO_PATH}/multi-install.sh --config {remote_config_path}"
+
+    def _run():
+        import asyncio
+        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+        engine = create_async_engine(DATABASE_URL, echo=False)
+        factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+        async def _inner():
+            async with factory() as db:
+                j = (await db.execute(select(ProvisioningJob).where(ProvisioningJob.id == job_id))).scalar_one_or_none()
+                if j:
+                    j.status = "running"; j.started_at = datetime.now(timezone.utc)
+                    j.log_text = "Connecting via SSH to new server..."; await db.commit()
+
+            ssh = None
+            try:
+                ssh = SSHClient(
+                    host=server.ssh_host, port=server.ssh_port, username=server.ssh_user,
+                    private_key_pem=decrypt_value(server.ssh_key_encrypted), host_key=server.ssh_host_key,
+                )
+                ssh.connect()
+                await _update_job(job_id, factory, "Writing broker config file...")
+                ssh.write_temp_file(config_content, remote_config_path)
+
+                await _update_job(job_id, factory, "Syncing scripts repo...")
+                sync_cmd = (
+                    f"if [ -d {SCRIPTS_REPO_PATH}/.git ]; then "
+                    f"sudo git -C {SCRIPTS_REPO_PATH} fetch --quiet origin && "
+                    f"sudo git -C {SCRIPTS_REPO_PATH} reset --hard 'origin/{SCRIPTS_REF}'; "
+                    f"else sudo git clone --quiet -b '{SCRIPTS_REF}' {SCRIPTS_REPO_URL} {SCRIPTS_REPO_PATH}; "
+                    f"fi"
+                )
+                exit_code, output = ssh._run(sync_cmd, timeout=30)
+                if exit_code != 0:
+                    raise RuntimeError(f"git-sync failed: {output[:500]}")
+
+                await _update_job(job_id, factory, "Running multi-install.sh (install deps + first instance)...")
+                exit_code, output = ssh._run(f"sudo bash {SCRIPTS_REPO_PATH}/multi-install.sh --config {remote_config_path}", timeout=1800)
+                ssh.delete_temp_file(remote_config_path)
+
+                if exit_code != 0:
+                    raise RuntimeError(f"multi-install.sh failed (exit {exit_code}):\n{output[:2000]}")
+
+                await _update_job(job_id, factory, "Setting admin password via --set-admin-password...")
+                admin_username = "fleetmgr"
+                pw_exit, pw_output = ssh.set_admin_password(admin_username, admin_pw)
+                if pw_exit != 0:
+                    logger.warning("set_admin_password on %s: exit %d, %s", server.ssh_host, pw_exit, pw_output[:200])
+                    pw_output = f"(admin password may not have been set)\n{pw_output}"
+
+                async with factory() as db:
+                    srv = (await db.execute(select(Server).where(Server.id == server.id))).scalar_one_or_none()
+                    j = (await db.execute(select(ProvisioningJob).where(ProvisioningJob.id == job_id))).scalar_one_or_none()
+                    if srv:
+                        srv.admin_username = admin_username
+                        srv.admin_password_encrypted = encrypt_value(admin_pw)
+                    if j:
+                        j.status = "success"; j.log_text = output + "\n\n" + pw_output; j.finished_at = datetime.now(timezone.utc)
+                    inst = Instance(server_id=server.id, instance_name=instance_name, domain=domain,
+                                   broker=broker, status="provisioned", health_status="pending")
+                    db.add(inst)
+                    await db.commit()
+
+            except Exception as e:
+                async with factory() as db:
+                    j = (await db.execute(select(ProvisioningJob).where(ProvisioningJob.id == job_id))).scalar_one_or_none()
+                    if j:
+                        j.status = "failed"; j.log_text = f"Bootstrap failed: {e}"; j.finished_at = datetime.now(timezone.utc)
+                        await db.commit()
+            finally:
+                if ssh:
+                    try:
+                        ssh.close()
+                    except Exception:
+                        pass
+
+        asyncio.run(_inner())
+
+    Thread(target=_run, daemon=True).start()
+
+
+async def _update_job(job_id: int, factory, text: str):
+    async with factory() as db:
+        j = (await db.execute(select(ProvisioningJob).where(ProvisioningJob.id == job_id))).scalar_one_or_none()
+        if j:
+            j.log_text = text
+            await db.commit()
 
 
 @router.get("/jobs/{job_id}")

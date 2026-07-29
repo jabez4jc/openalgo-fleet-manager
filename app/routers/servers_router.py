@@ -160,7 +160,7 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
     if not instances:
         html += '<div class="card"><div class="empty-state">No instances found on this server. Poll may not have run yet, or the server has no OpenAlgo instances.</div></div>'
     else:
-        html += '<div class="card"><div class="card-head"><h2>Instances</h2></div><table><thead><tr><th>Instance</th><th>Domain</th><th>Broker</th><th>Status</th><th>Health</th><th>Version</th><th>Last Poll</th><th>Actions</th></tr></thead><tbody>'
+        html += '<div class="card"><div class="card-head"><h2>Instances</h2><a href="/provision" class="btn btn-accent btn-sm">Provision Instance</a></div><table><thead><tr><th>Instance</th><th>Domain</th><th>Broker</th><th>Status</th><th>Health</th><th>Version</th><th>Last Poll</th><th>Actions</th></tr></thead><tbody>'
         for inst in instances:
             health_badge = ""
             hs = inst.health_status or "unknown"

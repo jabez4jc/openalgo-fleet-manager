@@ -35,6 +35,7 @@ BASE_TEMPLATE_START = """<!DOCTYPE html>
 <div class="topbar-right">
 <a href="/" class="nav-link active">Dashboard</a>
 <a href="/servers" class="nav-link">Servers</a>
+<a href="/provision" class="nav-link">Provision</a>
 <a href="/jobs" class="nav-link">Jobs</a>
 <a href="/audit" class="nav-link">Audit Log</a>
 <a href="/logout" class="nav-link">Logout</a>
