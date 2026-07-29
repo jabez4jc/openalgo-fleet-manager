@@ -21,15 +21,12 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql+asyncpg://fleetmgr:changeme@postgres:5432/fleetmgr
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://fleetmgr:changeme@postgres:5432/fleetmgr}
       FERNET_KEY: ${FERNET_KEY:-}
       SESSION_SECRET: ${SESSION_SECRET:-dev-secret-change-me}
       FLEET_ADMIN_BOOTSTRAP_PASSWORD: ${FLEET_ADMIN_BOOTSTRAP_PASSWORD:-}
       SCRIPTS_REF: ${SCRIPTS_REF:-main}
       POLL_INTERVAL_SECONDS: ${POLL_INTERVAL_SECONDS:-60}
-    depends_on:
-      postgres:
-        condition: service_healthy
     restart: unless-stopped
 
 volumes:
