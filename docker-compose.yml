@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fleetmgr
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: fleetmgr
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fleetmgr -d fleetmgr"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://fleetmgr:changeme@postgres:5432/fleetmgr
+      FERNET_KEY: ${FERNET_KEY:-}
+      SESSION_SECRET: ${SESSION_SECRET:-dev-secret-change-me}
+      FLEET_ADMIN_BOOTSTRAP_PASSWORD: ${FLEET_ADMIN_BOOTSTRAP_PASSWORD:-}
+      SCRIPTS_REF: ${SCRIPTS_REF:-main}
+      POLL_INTERVAL_SECONDS: ${POLL_INTERVAL_SECONDS:-60}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
