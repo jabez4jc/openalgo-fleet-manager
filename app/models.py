@@ -33,8 +33,8 @@ class Server(Base):
     last_seen_at = Column(DateTime(timezone=True), nullable=True)
     notes = Column(Text, nullable=True)
 
-    instances = relationship("Instance", back_populates="server", cascade="all, delete-orphan")
-    provisioning_jobs = relationship("ProvisioningJob", back_populates="server", cascade="all, delete-orphan")
+    instances = relationship("Instance", back_populates="server", cascade="all, delete-orphan", lazy="selectin")
+    provisioning_jobs = relationship("ProvisioningJob", back_populates="server", cascade="all, delete-orphan", lazy="selectin")
 
 
 class Instance(Base):
