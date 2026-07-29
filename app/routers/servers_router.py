@@ -124,6 +124,7 @@ async def add_server_submit(
     await db.commit()
 
     await write_audit_log(db, actor=username, action="add_server", server_id=server.id, detail={"name": name, "base_url": base_url})
+    await db.commit()
 
     return RedirectResponse(url="/servers", status_code=302)
 
@@ -379,5 +380,6 @@ async def edit_server_submit(
     await db.commit()
 
     await write_audit_log(db, actor=username, action="edit_server", server_id=server.id, detail={"name": name})
+    await db.commit()
 
     return RedirectResponse(url=f"/servers/{server_id}", status_code=302)

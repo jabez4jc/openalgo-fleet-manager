@@ -100,6 +100,11 @@ class SSHClient:
         if "missing" in out:
             return 1, "openalgo-restart-api.py not found at /usr/local/bin"
 
-        cmd = f"printf '%s' \"$PW\" | sudo python3 {api_path} --set-admin-password --username {username} --password-stdin"
-        _, out, err = self._run(f"PW='{password}'; {cmd}", timeout=15)
-        return 0, out + err
+        cmd = f"sudo python3 {api_path} --set-admin-password --username {username} --password-stdin"
+        stdin, stdout, stderr = self._client.exec_command(cmd, timeout=15)
+        stdin.write(password)
+        stdin.close()
+        exit_code = stdout.channel.recv_exit_status()
+        out = stdout.read().decode("utf-8", errors="replace")
+        err = stderr.read().decode("utf-8", errors="replace")
+        return exit_code, out + err

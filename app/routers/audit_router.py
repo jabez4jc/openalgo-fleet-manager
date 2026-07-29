@@ -1,4 +1,5 @@
 import json
+import html as _html
 
 from fastapi import APIRouter, Request, Depends, Query
 from fastapi.responses import HTMLResponse
@@ -8,6 +9,10 @@ from sqlalchemy import select, desc
 from app.database import get_db
 from app.models import AuditLog
 from app.routers.dashboard_router import BASE_TEMPLATE_START, BASE_TEMPLATE_END
+
+
+def _esc(s: str | None) -> str:
+    return _html.escape(s or "")
 
 router = APIRouter(prefix="/audit", tags=["audit"])
 
@@ -38,7 +43,7 @@ async def audit_log_page(
 <div class="card-head"><h2>Audit Log</h2></div>
 <div class="filter-bar">
 <form method="GET" action="/audit" style="display:flex;gap:8px;flex-wrap:wrap;width:100%">
-<input type="text" name="search" value="{search or ''}" placeholder="Search actor, action, instance...">
+<input type="text" name="search" value="{_esc(search)}" placeholder="Search actor, action, instance...">
 <select name="action_filter" onchange="this.form.submit()">
 <option value="">All actions</option>
 <option value="login" {'selected' if action_filter=='login' else ''}>login</option>
@@ -73,13 +78,14 @@ async def audit_log_page(
                 except Exception:
                     detail_str = entry.detail_json[:100]
 
+            escaped_detail = _esc(detail_str)
             html += f"""<tr>
 <td style="font-size:12px;color:var(--text-faint);white-space:nowrap">{entry.created_at.strftime('%Y-%m-%d %H:%M:%S') if entry.created_at else ''}</td>
-<td>{entry.actor or '—'}</td>
-<td><strong>{entry.action}</strong></td>
+<td>{_esc(entry.actor) or '—'}</td>
+<td><strong>{_esc(entry.action)}</strong></td>
 <td style="font-size:12px">{entry.server_id or '—'}</td>
-<td>{entry.instance_name or '—'}</td>
-<td style="font-size:11px;color:var(--text-dim);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{detail_str}">{detail_str}</td>
+<td>{_esc(entry.instance_name) or '—'}</td>
+<td style="font-size:11px;color:var(--text-dim);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{escaped_detail}">{escaped_detail}</td>
 </tr>"""
         html += '</tbody></table>'
     html += '</div>' + BASE_TEMPLATE_END

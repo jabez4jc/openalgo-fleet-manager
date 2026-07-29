@@ -34,6 +34,7 @@ async def restart_instance(request: Request, server_id: int, db: AsyncSession = 
 
     username = request.session.get("username", "unknown")
     await write_audit_log(db, actor=username, action="restart_instance", server_id=server_id, instance_name=instance)
+    await db.commit()
 
     api = _get_api_for_server(server)
     result = await api.restart_instance(instance)
@@ -54,6 +55,7 @@ async def stop_instance(request: Request, server_id: int, db: AsyncSession = Dep
 
     username = request.session.get("username", "unknown")
     await write_audit_log(db, actor=username, action="stop_instance", server_id=server_id, instance_name=instance)
+    await db.commit()
 
     api = _get_api_for_server(server)
     result = await api.stop_instance(instance)
@@ -74,6 +76,7 @@ async def start_instance(request: Request, server_id: int, db: AsyncSession = De
 
     username = request.session.get("username", "unknown")
     await write_audit_log(db, actor=username, action="start_instance", server_id=server_id, instance_name=instance)
+    await db.commit()
 
     api = _get_api_for_server(server)
     result = await api.start_instance(instance)
@@ -89,6 +92,7 @@ async def restart_all(request: Request, server_id: int, db: AsyncSession = Depen
 
     username = request.session.get("username", "unknown")
     await write_audit_log(db, actor=username, action="restart_all", server_id=server_id)
+    await db.commit()
 
     api = _get_api_for_server(server)
     result = await api.restart_all()
@@ -108,6 +112,7 @@ async def health_check(request: Request, server_id: int, db: AsyncSession = Depe
 
     username = request.session.get("username", "unknown")
     await write_audit_log(db, actor=username, action="health_check", server_id=server_id, instance_name=instance)
+    await db.commit()
 
     api = _get_api_for_server(server)
     result = await api.health_check(scope=scope, instance=instance)
@@ -132,6 +137,7 @@ async def update_instances(request: Request, server_id: int, db: AsyncSession = 
 
     username = request.session.get("username", "unknown")
     await write_audit_log(db, actor=username, action="update", server_id=server_id, instance_name=instance)
+    await db.commit()
 
     api = _get_api_for_server(server)
     result = await api.update(scope=scope, instance=instance)
@@ -152,6 +158,7 @@ async def reboot_server(request: Request, server_id: int, db: AsyncSession = Dep
 
     username = request.session.get("username", "unknown")
     await write_audit_log(db, actor=username, action="reboot_server", server_id=server_id)
+    await db.commit()
 
     api = _get_api_for_server(server)
     result = await api.reboot_server()

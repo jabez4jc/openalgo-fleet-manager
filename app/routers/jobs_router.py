@@ -15,10 +15,8 @@ router = APIRouter(tags=["jobs"])
 @router.get("/api/jobs/{job_id}")
 async def get_job_status(request: Request, job_id: str, server_id: int = Query(None), db: AsyncSession = Depends(get_db)):
     local_job = None
-    if server_id:
-        result = await db.execute(
-            select(ProvisioningJob).where(ProvisioningJob.id == int(job_id) if job_id.isdigit() else None)
-        )
+    if server_id and job_id.isdigit():
+        result = await db.execute(select(ProvisioningJob).where(ProvisioningJob.id == int(job_id)))
         local_job = result.scalar_one_or_none()
 
     if local_job:

@@ -2,10 +2,8 @@ import hashlib
 import hmac
 import secrets
 import time
-import json
 from threading import Lock
 
-import base64
 from cryptography.fernet import Fernet
 
 from app.config import FERNET_KEY

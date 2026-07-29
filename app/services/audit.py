@@ -26,5 +26,5 @@ async def write_audit_log(
         created_at=datetime.now(timezone.utc),
     )
     db.add(entry)
-    await db.commit()
+    await db.flush()
     logger.info("Audit: %s by %s (server=%s, instance=%s)", action, actor, server_id, instance_name)

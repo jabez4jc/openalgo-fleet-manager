@@ -30,61 +30,6 @@ VALID_BROKERS = [
 XTS_BROKERS = ["fivepaisaxts", "compositedge", "ibulls", "iifl", "jainamxts", "rmoney", "wisdom"]
 
 
-def _run_provision_job(db_url: str, job_id: int, ssh_config: dict, command: str, cleanup_cmd: str | None = None):
-    import asyncio
-    from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-    from sqlalchemy import select, update
-
-    engine = create_async_engine(db_url, echo=False)
-    factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
-    async def _run():
-        async with factory() as db:
-            result = await db.execute(select(ProvisioningJob).where(ProvisioningJob.id == job_id))
-            job = result.scalar_one_or_none()
-            if not job:
-                return
-            job.status = "running"
-            job.started_at = datetime.now(timezone.utc)
-            await db.commit()
-
-            ssh = None
-            try:
-                ssh = SSHClient(
-                    host=ssh_config["host"],
-                    port=ssh_config["port"],
-                    username=ssh_config["user"],
-                    private_key_pem=ssh_config["key"],
-                    host_key=ssh_config.get("host_key"),
-                )
-                ssh.connect()
-                exit_code, output = ssh.git_sync_then_invoke(command, timeout=1800)
-
-                if cleanup_cmd:
-                    try:
-                        ssh._run(cleanup_cmd, timeout=10)
-                    except Exception:
-                        pass
-
-                job.status = "success" if exit_code == 0 else "failed"
-                job.log_text = output
-                job.finished_at = datetime.now(timezone.utc)
-                await db.commit()
-
-            except Exception as e:
-                job.status = "failed"
-                job.log_text = f"SSH error: {e}"
-                job.finished_at = datetime.now(timezone.utc)
-                await db.commit()
-            finally:
-                if ssh:
-                    try:
-                        ssh.close()
-                    except Exception:
-                        pass
-
-    asyncio.run(_run())
-
 
 @router.get("", response_class=HTMLResponse)
 async def provisioning_page(request: Request, db: AsyncSession = Depends(get_db)):
@@ -262,6 +207,7 @@ async def submit_provision(request: Request, db: AsyncSession = Depends(get_db))
     await db.refresh(job)
 
     await write_audit_log(db, actor=username, action=f"provision_{job_type}", server_id=server_id, instance_name=domain, detail={"broker": broker})
+    await db.commit()
 
     config_lines = [
         "CHANGE_TZ=y",
@@ -280,14 +226,6 @@ async def submit_provision(request: Request, db: AsyncSession = Depends(get_db))
     remote_config_path = f"/tmp/instance-{job.id}.env"
     multi_install_cmd = f"sudo bash {SCRIPTS_REPO_PATH}/multi-install.sh --config {remote_config_path}"
     cleanup_cmd = f"shred -u {remote_config_path} 2>/dev/null || rm -f {remote_config_path}"
-
-    ssh_config = {
-        "host": server.ssh_host,
-        "port": server.ssh_port,
-        "user": server.ssh_user,
-        "key": decrypt_value(server.ssh_key_encrypted),
-        "host_key": server.ssh_host_key,
-    }
 
     from app.config import DATABASE_URL
 
@@ -310,7 +248,13 @@ async def submit_provision(request: Request, db: AsyncSession = Depends(get_db))
 
             ssh = None
             try:
-                ssh = SSHClient(**ssh_config)
+                ssh = SSHClient(
+                    host=server.ssh_host,
+                    port=server.ssh_port,
+                    username=server.ssh_user,
+                    private_key_pem=decrypt_value(server.ssh_key_encrypted),
+                    host_key=server.ssh_host_key,
+                )
                 ssh.connect()
 
                 async with factory() as db3:

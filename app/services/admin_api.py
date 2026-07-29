@@ -1,11 +1,11 @@
-import json
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from urllib.parse import urljoin
 
 import httpx
 
 from app.encryption import decrypt_value
+from app.config import SSL_VERIFY
 
 
 @dataclass
@@ -18,7 +18,7 @@ class AdminAPISession:
 
     async def _login(self) -> bool:
         try:
-            async with httpx.AsyncClient(timeout=15, verify=False) as client:
+            async with httpx.AsyncClient(timeout=15, verify=SSL_VERIFY) as client:
                 resp = await client.post(
                     urljoin(self.base_url, "/login-submit"),
                     data={"username": self.username, "password": self.password},
@@ -49,7 +49,7 @@ class AdminAPISession:
             headers["Cookie"] = f"oa_session={self.cookie}"
 
         try:
-            async with httpx.AsyncClient(timeout=30, verify=False) as client:
+            async with httpx.AsyncClient(timeout=30, verify=SSL_VERIFY) as client:
                 if method == "GET":
                     resp = await client.get(urljoin(self.base_url, path), headers=headers, params=params)
                 elif method == "POST":

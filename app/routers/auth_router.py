@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Form, Depends, Response
+from fastapi import APIRouter, Request, Form, Depends
 from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -79,24 +79,14 @@ async def login_submit(
     is_bootstrap = await check_bootstrap(db)
 
     if is_bootstrap and not user:
-        pw = await bootstrap_admin(db)
-        result2 = await db.execute(select(FleetUser).where(FleetUser.username == username))
-        user = result2.scalar_one_or_none()
-        if user:
-            if not verify_password(password, user.password_hash):
-                html = LOGIN_TEMPLATE.format(
-                    error_html='<div class="login-error">Invalid username or password.</div>',
-                    info_html='',
-                    next_path=_esc(next),
-                )
-                return HTMLResponse(content=html)
-        else:
-            html = LOGIN_TEMPLATE.format(
-                error_html='<div class="login-error">Invalid username or password.</div>',
-                info_html='',
-                next_path=_esc(next),
-            )
-            return HTMLResponse(content=html)
+        await bootstrap_admin(db)
+        info = '<div class="login-info">First-run setup complete. Sign in with username <strong>admin</strong> and the bootstrap password set in your environment.</div>'
+        html = LOGIN_TEMPLATE.format(
+            error_html='',
+            info_html=info,
+            next_path=_esc(next),
+        )
+        return HTMLResponse(content=html)
 
     if not user or not verify_password(password, user.password_hash):
         html = LOGIN_TEMPLATE.format(
@@ -110,7 +100,7 @@ async def login_submit(
     request.session["user_id"] = user.id
     request.session["username"] = user.username
 
-    resp = RedirectResponse(url=next if next.startswith("/") else "/", status_code=302)
+    resp = RedirectResponse(url=next if (next.startswith("/") and not next.startswith("//")) else "/", status_code=302)
     cookie = f"{SESSION_COOKIE}={token}; HttpOnly; Path=/; Max-Age={12 * 3600}; SameSite=Lax"
     if request.headers.get("x-forwarded-proto", "").lower() == "https":
         cookie += "; Secure"
@@ -124,6 +114,7 @@ async def login_submit(
     )
 
     await write_audit_log(db, actor=username, action="login")
+    await db.commit()
 
     return resp
 
@@ -137,6 +128,7 @@ async def logout(request: Request, db: AsyncSession = Depends(get_db)):
         request.session.clear()
 
     await write_audit_log(db, actor=username, action="logout")
+    await db.commit()
 
     resp = RedirectResponse(url="/login", status_code=302)
     resp.delete_cookie(SESSION_COOKIE)
@@ -236,5 +228,6 @@ async def change_password(request: Request, db: AsyncSession = Depends(get_db)):
     await db.commit()
 
     await write_audit_log(db, actor=user.username, action="change_password")
+    await db.commit()
 
     return {"status": "success", "message": "Password changed"}

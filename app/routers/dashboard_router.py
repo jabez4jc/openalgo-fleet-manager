@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Request, Depends, Query
+from fastapi import APIRouter, Request, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select
 
 from app.database import get_db
-from app.models import Server, Instance, FleetUser
+from app.models import Server, FleetUser
 
 router = APIRouter(tags=["dashboard"])
 
