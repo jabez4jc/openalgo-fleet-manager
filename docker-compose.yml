@@ -15,8 +15,6 @@ services:
       timeout: 3s
       retries: 5
       start_period: 3s
-    networks:
-      - coolify
 
   app:
     build: .
@@ -30,13 +28,6 @@ services:
       SCRIPTS_REF: ${SCRIPTS_REF:-main}
       POLL_INTERVAL_SECONDS: ${POLL_INTERVAL_SECONDS:-60}
     restart: unless-stopped
-    networks:
-      - coolify
-
-networks:
-  coolify:
-    external: true
-    name: coolify
 
 volumes:
   pgdata:
