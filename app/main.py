@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -19,22 +20,40 @@ from app.services.poller import poll_all_servers
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 logger = logging.getLogger("fleetmgr")
 
-scheduler = AsyncIOScheduler()
-
-
-@scheduler.scheduled_job("interval", seconds=POLL_INTERVAL_SECONDS, id="poll_servers")
-async def scheduled_poll():
-    async with async_session_factory() as db:
-        await poll_all_servers(db)
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
+    retries = 0
+    max_retries = 30
+    while retries < max_retries:
+        try:
+            await init_db()
+            break
+        except Exception as e:
+            retries += 1
+            logger.warning("Database not ready (attempt %d/%d): %s", retries, max_retries, e)
+            if retries == max_retries:
+                logger.error("Database never became available after %d attempts — exiting", max_retries)
+                raise
+            await asyncio.sleep(2)
+
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(
+        scheduled_poll,
+        "interval",
+        seconds=POLL_INTERVAL_SECONDS,
+        id="poll_servers",
+        replace_existing=True,
+    )
     scheduler.start()
     logger.info("Fleet Manager started, polling every %ds", POLL_INTERVAL_SECONDS)
     yield
     scheduler.shutdown(wait=False)
+
+
+async def scheduled_poll():
+    async with async_session_factory() as db:
+        await poll_all_servers(db)
 
 
 app = FastAPI(title="OpenAlgo Fleet Manager", lifespan=lifespan)
