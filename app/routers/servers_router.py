@@ -208,7 +208,18 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
         html += '</tbody></table></div>'
 
     html += """
-<div id="action-result" class="card hidden">
+<div class="card">
+<div class="card-head"><h2>Server Actions</h2></div>
+<div style="padding:16px 20px;display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn-sm" onclick="actionRestartAll()">Restart All</button>
+<button class="btn btn-sm btn-success" onclick="actionHealthCheckAll()">Health Check All</button>
+<button class="btn btn-sm" onclick="actionUpdateAll()">Update All</button>
+<button class="btn btn-sm btn-danger" onclick="actionReboot()">Reboot Server</button>
+</div>
+</div>
+"""
+
+    html += """
 <div class="card-head"><h2 id="action-title">Action</h2></div>
 <div id="action-log" class="job-log-viewer"></div>
 <div style="padding:16px 20px;display:flex;gap:8px">
@@ -289,6 +300,26 @@ async function actionUpdate(inst){{
 if(!confirm('Update instance '+inst+' to latest code? This will restart it.'))return;
 const d=await apiCall('/update',{{instance:inst,scope:'instance'}});
 showActionPanel('Update '+inst,d);
+}}
+async function actionRestartAll(){{
+if(!confirm('Restart ALL instances on this server?'))return;
+const d=await apiCall('/restart-all');
+showActionPanel('Restart All',d);
+}}
+async function actionHealthCheckAll(){{
+const d=await apiCall('/health-check',{{scope:'all'}});
+showActionPanel('Health Check All',d);
+}}
+async function actionUpdateAll(){{
+if(!confirm('Update ALL instances on this server to latest code? This will restart each one.'))return;
+const d=await apiCall('/update',{{scope:'all'}});
+showActionPanel('Update All',d);
+}}
+async function actionReboot(){{
+if(!confirm('REBOOT the entire server? This will take all instances offline.'))return;
+if(!confirm('Are you sure? A reboot will restart the entire operating system.'))return;
+const d=await apiCall('/reboot-server');
+showActionPanel('Reboot Server',d);
 }}
 </script>
 """
