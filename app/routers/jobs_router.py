@@ -63,7 +63,7 @@ async def jobs_page(request: Request, db: AsyncSession = Depends(get_db)):
     if not jobs:
         html += '<div class="empty-state">No provisioning jobs yet.</div>'
     else:
-        html += '<table><thead><tr><th>ID</th><th>Type</th><th>Server</th><th>Status</th><th>Started</th><th>Finished</th><th>Triggered By</th></tr></thead><tbody>'
+        html += '<div class="table-wrap"><table><thead><tr><th>ID</th><th>Type</th><th>Server</th><th>Status</th><th>Started</th><th>Finished</th><th>Triggered By</th></tr></thead><tbody>'
         for job in jobs:
             server_name = job.server.name if job.server else "\u2014"
             status_badge = ""
@@ -89,7 +89,7 @@ async def jobs_page(request: Request, db: AsyncSession = Depends(get_db)):
 <td style="font-size:12px;color:var(--text-secondary)">{str_finished}</td>
 <td style="color:var(--text-secondary)">{triggered}</td>
 </tr>"""
-        html += '</tbody></table>'
+        html += '</tbody></table></div>'
     html += '</div>' + BASE_TEMPLATE_END
     return HTMLResponse(content=html)
 

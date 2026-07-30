@@ -142,7 +142,7 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
     if not servers:
         html += '<div class="card"><div class="empty-state">No servers registered. <a href="/servers/add" style="color:var(--accent)">Add your first server</a>.</div></div>'
     else:
-        html += '<div class="card"><div class="card-head"><h2>Servers</h2></div><table><thead><tr><th>Server</th><th>URL</th><th>Instances</th><th>Healthy</th><th>Warning</th><th>Critical</th><th>Last Seen</th><th></th></tr></thead><tbody>'
+        html += '<div class="card"><div class="card-head"><h2>Servers</h2></div><div class="table-wrap"><table><thead><tr><th>Server</th><th>URL</th><th>Instances</th><th>Healthy</th><th>Warning</th><th>Critical</th><th>Last Seen</th><th></th></tr></thead><tbody>'
         for row in server_rows:
             html += f"""<tr>
 <td><a href="/servers/{row['id']}" class="mono" style="color:var(--accent);text-decoration:none;font-weight:600">{row['name']}</a></td>
@@ -154,7 +154,7 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
 <td style="font-size:12px;color:var(--text-muted)">{'<script>document.write(fmtTime("'+row['last_seen']+'"))</script>' if row['last_seen'] else 'never'}</td>
 <td><a href="/servers/{row['id']}" class="btn btn-sm btn-ghost">View</a></td>
 </tr>"""
-        html += '</tbody></table></div>'
+        html += '</tbody></table></div></div>'
 
     html += BASE_TEMPLATE_END
     return HTMLResponse(content=html)

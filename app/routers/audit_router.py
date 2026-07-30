@@ -42,7 +42,7 @@ async def audit_log_page(
 <div class="card">
 <div class="card-head"><h2>Audit Log</h2></div>
 <div class="filter-bar">
-<form method="GET" action="/audit" style="display:flex;gap:8px;flex-wrap:wrap;width:100%">
+<form method="GET" action="/audit">
 <input type="text" name="search" value="{_esc(search)}" placeholder="Search actor, action, instance...">
 <select name="action_filter" onchange="this.form.submit()">
 <option value="">All actions</option>
@@ -68,7 +68,7 @@ async def audit_log_page(
     if not entries:
         html += '<div class="empty-state">No audit log entries.</div>'
     else:
-        html += '<table><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Server</th><th>Instance</th><th>Details</th></tr></thead><tbody>'
+        html += '<div class="table-wrap"><table><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Server</th><th>Instance</th><th>Details</th></tr></thead><tbody>'
         for entry in entries:
             detail_str = ""
             if entry.detail_json:
@@ -91,6 +91,6 @@ async def audit_log_page(
 <td style="color:var(--text-secondary)">{instance_name}</td>
 <td style="font-size:11px;color:var(--text-muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{escaped_detail}">{escaped_detail}</td>
 </tr>"""
-        html += '</tbody></table>'
+        html += '</tbody></table></div>'
     html += '</div>' + BASE_TEMPLATE_END
     return HTMLResponse(content=html)

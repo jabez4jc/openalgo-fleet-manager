@@ -29,7 +29,7 @@ async def servers_list(request: Request, db: AsyncSession = Depends(get_db)):
     if not servers:
         html += '<div class="empty-state">No servers registered yet.</div>'
     else:
-        html += '<table><thead><tr><th>Name</th><th>URL</th><th>SSH Host</th><th>Instances</th><th>Last Seen</th><th></th></tr></thead><tbody>'
+        html += '<div class="table-wrap"><table><thead><tr><th>Name</th><th>URL</th><th>SSH Host</th><th>Instances</th><th>Last Seen</th><th></th></tr></thead><tbody>'
         for srv in servers:
             inst_count = len(srv.instances)
             last_seen = srv.last_seen_at.strftime("%Y-%m-%d %H:%M:%S") if srv.last_seen_at else "never"
@@ -45,7 +45,7 @@ async def servers_list(request: Request, db: AsyncSession = Depends(get_db)):
 <a href="/servers/{srv.id}/edit" class="btn btn-sm btn-ghost">Edit</a>
 </div></td>
 </tr>"""
-        html += '</tbody></table>'
+        html += '</tbody></table></div>'
     html += '</div>' + BASE_TEMPLATE_END
     return HTMLResponse(content=html)
 
@@ -162,7 +162,7 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
     if not instances:
         html += '<div class="card"><div class="empty-state">No instances found on this server. Poll may not have run yet, or the server has no OpenAlgo instances.</div></div>'
     else:
-        html += '<div class="card"><div class="card-head"><h2>Instances</h2><a href="/provision" class="btn btn-accent btn-sm">Provision Instance</a></div><table><thead><tr><th>Instance</th><th>Domain</th><th>Broker</th><th>Status</th><th>Health</th><th>Version</th><th>Last Poll</th><th>Actions</th></tr></thead><tbody>'
+        html += '<div class="card"><div class="card-head"><h2>Instances</h2><a href="/provision" class="btn btn-accent btn-sm">Provision Instance</a></div><div class="table-wrap"><table><thead><tr><th>Instance</th><th>Domain</th><th>Broker</th><th>Status</th><th>Health</th><th>Version</th><th>Last Poll</th><th>Actions</th></tr></thead><tbody>'
         for inst in instances:
             health_badge = ""
             hs = inst.health_status or "unknown"
@@ -208,7 +208,7 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
 <button class="btn btn-sm" onclick="actionUpdate('{inst.instance_name}')">Update</button>
 </div></td>
 </tr>"""
-        html += '</tbody></table></div>'
+        html += '</tbody></table></div></div>'
 
     html += """
 <div class="card">
