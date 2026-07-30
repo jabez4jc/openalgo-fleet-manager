@@ -33,17 +33,17 @@ async def servers_list(request: Request, db: AsyncSession = Depends(get_db)):
         for srv in servers:
             inst_count = len(srv.instances)
             last_seen = srv.last_seen_at.strftime("%Y-%m-%d %H:%M:%S") if srv.last_seen_at else "never"
-            ssh_info = f"{srv.ssh_user}@{srv.ssh_host}:{srv.ssh_port}" if srv.ssh_host else "—"
+            ssh_info = f"{srv.ssh_user}@{srv.ssh_host}:{srv.ssh_port}" if srv.ssh_host else "\u2014"
             html += f"""<tr>
-<td><strong>{srv.name}</strong></td>
-<td class="mono">{srv.base_url}</td>
-<td class="mono">{ssh_info}</td>
-<td>{inst_count}</td>
-<td style="font-size:12px;color:var(--text-faint)">{last_seen}</td>
-<td style="display:flex;gap:6px">
-<a href="/servers/{srv.id}" class="btn btn-sm">View</a>
-<a href="/servers/{srv.id}/edit" class="btn btn-sm">Edit</a>
-</td>
+<td style="font-weight:600">{srv.name}</td>
+<td class="mono" style="color:var(--text-secondary)">{srv.base_url}</td>
+<td class="mono" style="color:var(--text-secondary)">{ssh_info}</td>
+<td style="font-weight:600">{inst_count}</td>
+<td style="font-size:12px;color:var(--text-muted)">{last_seen}</td>
+<td><div style="display:flex;gap:6px">
+<a href="/servers/{srv.id}" class="btn btn-sm btn-ghost">View</a>
+<a href="/servers/{srv.id}/edit" class="btn btn-sm btn-ghost">Edit</a>
+</div></td>
 </tr>"""
         html += '</tbody></table>'
     html += '</div>' + BASE_TEMPLATE_END
@@ -58,28 +58,28 @@ async def add_server_form(request: Request, db: AsyncSession = Depends(get_db)):
 <div class="card-head"><h2>Add Server</h2></div>
 <div style="padding:20px">
 <form method="POST" action="/servers/add">
-<label>Name</label>
-<input type="text" name="name" required placeholder="e.g. prod-server-1" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>Admin API URL</label>
-<input type="text" name="base_url" required placeholder="https://server-ip:8888" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>Admin Username</label>
-<input type="text" name="admin_username" required placeholder="fleetmgr" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>Admin Password</label>
-<input type="password" name="admin_password" required style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<hr style="border-color:var(--border-soft);margin:16px 0">
-<p style="font-size:12px;color:var(--text-faint);margin-bottom:12px">SSH details are optional now — required for provisioning (Phase 3).</p>
-<label>SSH Host</label>
-<input type="text" name="ssh_host" placeholder="192.168.1.10" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>SSH Port</label>
-<input type="number" name="ssh_port" value="22" placeholder="22" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>SSH User</label>
-<input type="text" name="ssh_user" placeholder="ubuntu" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>SSH Private Key <span style="color:var(--text-faint)">(paste full key)</span></label>
-<textarea name="ssh_key" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:12px;font-family:var(--mono);min-height:120px;resize:vertical"></textarea>
-<label>SSH Host Key <span style="color:var(--text-faint)">(ssh-keyscan output, for pinning)</span></label>
-<textarea name="ssh_host_key" placeholder="server.example.com ssh-rsa AAAAB3..." style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:12px;font-family:var(--mono);min-height:60px;resize:vertical"></textarea>
-<label>Notes</label>
-<textarea name="notes" placeholder="Optional notes..." style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit;min-height:60px;resize:vertical"></textarea>
+<label class="reset-field-label">Name</label>
+<input class="reset-input" type="text" name="name" required placeholder="e.g. prod-server-1">
+<label class="reset-field-label">Admin API URL</label>
+<input class="reset-input" type="text" name="base_url" required placeholder="https://server-ip:8888">
+<label class="reset-field-label">Admin Username</label>
+<input class="reset-input" type="text" name="admin_username" required placeholder="fleetmgr">
+<label class="reset-field-label">Admin Password</label>
+<input class="reset-input" type="password" name="admin_password" required>
+<hr style="border-color:var(--border);margin:16px 0">
+<p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">SSH details are optional - required for provisioning.</p>
+<label class="reset-field-label">SSH Host</label>
+<input class="reset-input" type="text" name="ssh_host" placeholder="192.168.1.10">
+<label class="reset-field-label">SSH Port</label>
+<input class="reset-input" type="number" name="ssh_port" value="22" placeholder="22">
+<label class="reset-field-label">SSH User</label>
+<input class="reset-input" type="text" name="ssh_user" placeholder="ubuntu">
+<label class="reset-field-label">SSH Private Key <span style="color:var(--text-muted)">(paste full key)</span></label>
+<textarea name="ssh_key" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----" class="mono" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:12px;min-height:120px;resize:vertical"></textarea>
+<label class="reset-field-label">SSH Host Key <span style="color:var(--text-muted)">(ssh-keyscan output, for pinning)</span></label>
+<textarea name="ssh_host_key" placeholder="server.example.com ssh-rsa AAAAB3..." class="mono" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:12px;min-height:60px;resize:vertical"></textarea>
+<label class="reset-field-label">Notes</label>
+<textarea name="notes" placeholder="Optional notes..." style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:13px;font-family:inherit;min-height:60px;resize:vertical"></textarea>
 <div style="display:flex;gap:10px;justify-content:flex-end">
 <a href="/servers" class="btn">Cancel</a>
 <button type="submit" class="btn btn-accent">Add Server</button>
@@ -137,23 +137,25 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
         return HTMLResponse(content=BASE_TEMPLATE_START + '<div class="card"><div class="empty-state">Server not found.</div></div>' + BASE_TEMPLATE_END)
 
     instances = server.instances
+    em = "\u2014"
+    ssh_info = f"{server.ssh_user}@{server.ssh_host}:{server.ssh_port}" if server.ssh_host else em
 
     html = BASE_TEMPLATE_START
     html += f"""
-<div class="card" style="margin-bottom:4px">
+<div class="card">
 <div class="card-head">
-<h2><a href="/" style="color:var(--text-dim);text-decoration:none">Fleet</a> / {server.name}</h2>
+<h2><a href="/">Fleet</a> / {server.name}</h2>
 <div style="display:flex;gap:8px">
-<a href="/servers/{server.id}/edit" class="btn btn-sm">Edit</a>
-<button class="btn btn-sm" onclick="location.reload()">Refresh</button>
+<a href="/servers/{server.id}/edit" class="btn btn-sm btn-ghost">Edit</a>
+<button class="btn btn-sm btn-ghost" onclick="location.reload()">Refresh</button>
 </div>
 </div>
-<div style="padding:16px 20px;display:flex;gap:24px;flex-wrap:wrap;font-size:13px">
-<div><span style="color:var(--text-faint)">URL:</span> <span class="mono">{server.base_url}</span></div>
-<div><span style="color:var(--text-faint)">Admin:</span> {server.admin_username}</div>
-<div><span style="color:var(--text-faint)">SSH:</span> {server.ssh_user}@{server.ssh_host}:{server.ssh_port if server.ssh_host else '—'}</div>
-<div><span style="color:var(--text-faint)">Instances:</span> {len(instances)}</div>
-<div><span style="color:var(--text-faint)">Last poll:</span> {server.last_seen_at.strftime('%Y-%m-%d %H:%M:%S') if server.last_seen_at else 'never'}</div>
+<div class="server-meta">
+<div class="server-meta-item"><span class="server-meta-label">URL</span><span class="server-meta-value">{server.base_url}</span></div>
+<div class="server-meta-item"><span class="server-meta-label">Admin</span><span>{server.admin_username}</span></div>
+<div class="server-meta-item"><span class="server-meta-label">SSH</span><span>{ssh_info}</span></div>
+<div class="server-meta-item"><span class="server-meta-label">Instances</span><span style="font-weight:600">{len(instances)}</span></div>
+<div class="server-meta-item"><span class="server-meta-label">Last poll</span><span class="mono">{server.last_seen_at.strftime('%Y-%m-%d %H:%M:%S') if server.last_seen_at else 'never'}</span></div>
 </div>
 </div>
 """
@@ -186,37 +188,38 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
             else:
                 status_badge = '<span class="badge badge-unknown">' + st + '</span>'
 
+            em = "\u2014"
             poll_time = inst.last_polled_at.strftime("%H:%M:%S") if inst.last_polled_at else "never"
 
             html += f"""<tr>
-<td><strong>{inst.instance_name}</strong></td>
-<td class="mono" style="font-size:12px">{inst.domain or '—'}</td>
-<td>{inst.broker or '—'}</td>
+<td style="font-weight:600">{inst.instance_name}</td>
+<td class="mono" style="font-size:12px;color:var(--text-secondary)">{inst.domain or em}</td>
+<td style="color:var(--text-secondary)">{inst.broker or em}</td>
 <td>{status_badge}</td>
 <td>{health_badge}</td>
-<td>{inst.env_version or '—'}</td>
-<td style="font-size:12px;color:var(--text-faint)">{poll_time}</td>
-<td style="display:flex;gap:4px;flex-wrap:wrap">
+<td style="color:var(--text-secondary)">{inst.env_version or em}</td>
+<td style="font-size:12px;color:var(--text-muted)">{poll_time}</td>
+<td><div style="display:flex;gap:4px;flex-wrap:wrap">
 <button class="btn btn-sm" onclick="actionRestart('{inst.instance_name}')">Restart</button>
 <button class="btn btn-sm btn-warning" onclick="actionStop('{inst.instance_name}')">Stop</button>
 <button class="btn btn-sm btn-success" onclick="actionStart('{inst.instance_name}')">Start</button>
-<button class="btn btn-sm" onclick="viewLogs('{inst.instance_name}')">Logs</button>
-<button class="btn btn-sm" onclick="actionHealthCheck('{inst.instance_name}')">Health</button>
+<button class="btn btn-sm btn-ghost" onclick="viewLogs('{inst.instance_name}')">Logs</button>
+<button class="btn btn-sm btn-ghost" onclick="actionHealthCheck('{inst.instance_name}')">Health</button>
 <button class="btn btn-sm" onclick="actionUpdate('{inst.instance_name}')">Update</button>
-</td>
+</div></td>
 </tr>"""
         html += '</tbody></table></div>'
 
     html += """
 <div class="card">
 <div class="card-head"><h2>Server Actions</h2></div>
-<div style="padding:16px 20px;display:flex;gap:8px;flex-wrap:wrap">
+<div class="action-bar">
 <button class="btn btn-sm" onclick="actionRestartAll()">Restart All</button>
 <button class="btn btn-sm btn-success" onclick="actionHealthCheckAll()">Health Check All</button>
 <button class="btn btn-sm" onclick="actionUpdateAll()">Update All</button>
 <button class="btn btn-sm btn-danger" onclick="actionReboot()">Reboot Server</button>
 </div>
-<div style="padding:8px 20px 16px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--border-soft)">
+<div class="section-divider">
 <button class="btn btn-sm" onclick="actionBackup()">Run Backup</button>
 <button class="btn btn-sm" onclick="actionBackupList()">Backup List</button>
 <button class="btn btn-sm" onclick="actionPatchSelfTest()">Patch Self-Test</button>
@@ -225,9 +228,10 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
 """
 
     html += """
-<div class="card-head"><h2 id="action-title">Action</h2></div>
+<div class="action-panel hidden" id="action-result">
+<div class="action-panel-head"><h2 id="action-title">Action</h2></div>
 <div id="action-log" class="job-log-viewer"></div>
-<div style="padding:16px 20px;display:flex;gap:8px">
+<div class="action-panel-footer">
 <button class="btn btn-sm" onclick="document.getElementById('action-result').classList.add('hidden')">Close</button>
 </div>
 </div>
@@ -373,27 +377,27 @@ async def edit_server_form(request: Request, server_id: int, db: AsyncSession = 
 <div class="card-head"><h2>Edit Server: {server.name}</h2></div>
 <div style="padding:20px">
 <form method="POST" action="/servers/{server.id}/edit">
-<label>Name</label>
-<input type="text" name="name" value="{server.name or ''}" required style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>Admin API URL</label>
-<input type="text" name="base_url" value="{server.base_url or ''}" required style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>Admin Username</label>
-<input type="text" name="admin_username" value="{server.admin_username or ''}" required style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>Admin Password <span style="color:var(--text-faint)">(leave blank to keep current)</span></label>
-<input type="password" name="admin_password" placeholder="Leave blank to keep current" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<hr style="border-color:var(--border-soft);margin:16px 0">
-<label>SSH Host</label>
-<input type="text" name="ssh_host" value="{server.ssh_host or ''}" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>SSH Port</label>
-<input type="number" name="ssh_port" value="{server.ssh_port}" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>SSH User</label>
-<input type="text" name="ssh_user" value="{server.ssh_user or ''}" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>SSH Private Key <span style="color:var(--text-faint)">(leave blank to keep current)</span></label>
-<textarea name="ssh_key" placeholder="Leave blank to keep current" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:12px;font-family:var(--mono);min-height:60px;resize:vertical"></textarea>
-<label>SSH Host Key <span style="color:var(--text-faint)">(leave blank to keep current)</span></label>
-<textarea name="ssh_host_key" placeholder="Leave blank to keep current" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:12px;font-family:var(--mono);min-height:60px;resize:vertical"></textarea>
-<label>Notes</label>
-<textarea name="notes" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit;min-height:60px;resize:vertical">{server.notes or ''}</textarea>
+<label class="reset-field-label">Name</label>
+<input class="reset-input" type="text" name="name" value="{server.name or ''}" required>
+<label class="reset-field-label">Admin API URL</label>
+<input class="reset-input" type="text" name="base_url" value="{server.base_url or ''}" required>
+<label class="reset-field-label">Admin Username</label>
+<input class="reset-input" type="text" name="admin_username" value="{server.admin_username or ''}" required>
+<label class="reset-field-label">Admin Password <span style="color:var(--text-muted)">(leave blank to keep current)</span></label>
+<input class="reset-input" type="password" name="admin_password" placeholder="Leave blank to keep current">
+<hr style="border-color:var(--border);margin:16px 0">
+<label class="reset-field-label">SSH Host</label>
+<input class="reset-input" type="text" name="ssh_host" value="{server.ssh_host or ''}">
+<label class="reset-field-label">SSH Port</label>
+<input class="reset-input" type="number" name="ssh_port" value="{server.ssh_port}">
+<label class="reset-field-label">SSH User</label>
+<input class="reset-input" type="text" name="ssh_user" value="{server.ssh_user or ''}">
+<label class="reset-field-label">SSH Private Key <span style="color:var(--text-muted)">(leave blank to keep current)</span></label>
+<textarea name="ssh_key" placeholder="Leave blank to keep current" class="mono" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:12px;min-height:60px;resize:vertical"></textarea>
+<label class="reset-field-label">SSH Host Key <span style="color:var(--text-muted)">(leave blank to keep current)</span></label>
+<textarea name="ssh_host_key" placeholder="Leave blank to keep current" class="mono" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:12px;min-height:60px;resize:vertical"></textarea>
+<label class="reset-field-label">Notes</label>
+<textarea name="notes" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:13px;font-family:inherit;min-height:60px;resize:vertical">{server.notes or ''}</textarea>
 <div style="display:flex;gap:10px;justify-content:flex-end">
 <a href="/servers/{server.id}" class="btn">Cancel</a>
 <button type="submit" class="btn btn-accent">Save Changes</button>

@@ -78,14 +78,18 @@ async def audit_log_page(
                 except Exception:
                     detail_str = entry.detail_json[:100]
 
+            em = "\u2014"
+            actor = _esc(entry.actor) or em
+            instance_name = _esc(entry.instance_name) or em
+            server_id = str(entry.server_id) if entry.server_id else em
             escaped_detail = _esc(detail_str)
             html += f"""<tr>
-<td style="font-size:12px;color:var(--text-faint);white-space:nowrap">{entry.created_at.strftime('%Y-%m-%d %H:%M:%S') if entry.created_at else ''}</td>
-<td>{_esc(entry.actor) or '—'}</td>
-<td><strong>{_esc(entry.action)}</strong></td>
-<td style="font-size:12px">{entry.server_id or '—'}</td>
-<td>{_esc(entry.instance_name) or '—'}</td>
-<td style="font-size:11px;color:var(--text-dim);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{escaped_detail}">{escaped_detail}</td>
+<td style="font-size:12px;color:var(--text-muted);white-space:nowrap">{entry.created_at.strftime('%Y-%m-%d %H:%M:%S') if entry.created_at else ''}</td>
+<td style="font-weight:500">{actor}</td>
+<td style="font-weight:600">{_esc(entry.action)}</td>
+<td style="font-size:12px;color:var(--text-secondary)">{server_id}</td>
+<td style="color:var(--text-secondary)">{instance_name}</td>
+<td style="font-size:11px;color:var(--text-muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{escaped_detail}">{escaped_detail}</td>
 </tr>"""
         html += '</tbody></table>'
     html += '</div>' + BASE_TEMPLATE_END

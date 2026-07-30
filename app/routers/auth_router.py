@@ -17,11 +17,17 @@ LOGIN_TEMPLATE = """<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OpenAlgo Fleet Manager - Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body class="login-page">
-<div class="card login-card">
-<h1><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>Fleet Manager</h1>
+<div class="login-card">
+<h1>
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+Fleet Manager
+</h1>
 <p class="sub">OpenAlgo Fleet Dashboard</p>
 {error_html}{info_html}
 <form method="POST" action="/login-submit">
@@ -160,36 +166,20 @@ async def force_change_password_page(request: Request):
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Change Password - Fleet Manager</title>
-<style>
-:root{
---bg:#0a0e17;--bg-elev:#0e1420;--surface:#121a29;--surface-2:#182135;--border:#232e44;--text:#e8ecf5;--text-dim:#94a2b9;
---accent:#5b8cff;--danger:#f4586e;--danger-soft:rgba(244,88,110,.12);
---radius:12px;--radius-sm:8px;
---shadow:0 1px 2px rgba(0,0,0,.35),0 12px 28px -12px rgba(0,0,0,.55);
---font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
-.cpw-card{width:100%;max-width:380px;padding:28px;margin:20px}
-.cpw-card h1{font-size:16px;font-weight:650;margin-bottom:16px}
-.error{background:var(--danger-soft);color:var(--danger);border:1px solid rgba(244,88,110,.35);border-radius:var(--radius-sm);padding:9px 12px;font-size:12.5px;margin-bottom:14px}
-label{display:block;font-size:12.5px;margin-bottom:5px;color:var(--text-dim)}
-input{width:100%;padding:9px 10px;margin-bottom:12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit}
-input:focus{outline:2px solid var(--accent);outline-offset:1px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;border:1px solid var(--border);background:var(--surface-2);color:var(--text);cursor:pointer;font-family:inherit;width:100%}
-.btn-accent{background:var(--accent);border-color:var(--accent);color:#fff}
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
-<div class="card cpw-card">
+<body style="display:flex;align-items:center;justify-content:center;min-height:100vh">
+<div class="login-card">
 <h1>Change Password Required</h1>
-<div id="error" class="error" style="display:none"></div>
+<div id="error" class="login-error" style="display:none"></div>
 <form id="cpw-form" onsubmit="changePassword(event)">
-<label>New Password</label>
-<input type="password" id="new-pw" required minlength="8">
-<label>Confirm New Password</label>
-<input type="password" id="confirm-pw" required minlength="8">
+<label class="reset-field-label">New Password</label>
+<input class="reset-input" type="password" id="new-pw" required minlength="8">
+<label class="reset-field-label">Confirm New Password</label>
+<input class="reset-input" type="password" id="confirm-pw" required minlength="8">
 <button type="submit" class="btn btn-accent">Change Password</button>
 </form>
 </div>

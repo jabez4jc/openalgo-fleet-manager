@@ -65,7 +65,7 @@ async def jobs_page(request: Request, db: AsyncSession = Depends(get_db)):
     else:
         html += '<table><thead><tr><th>ID</th><th>Type</th><th>Server</th><th>Status</th><th>Started</th><th>Finished</th><th>Triggered By</th></tr></thead><tbody>'
         for job in jobs:
-            server_name = job.server.name if job.server else "—"
+            server_name = job.server.name if job.server else "\u2014"
             status_badge = ""
             if job.status == "success":
                 status_badge = '<span class="badge badge-healthy">success</span>'
@@ -76,14 +76,18 @@ async def jobs_page(request: Request, db: AsyncSession = Depends(get_db)):
             else:
                 status_badge = f'<span class="badge badge-unknown">{job.status}</span>'
 
+            em = "\u2014"
+            str_started = job.started_at.strftime('%Y-%m-%d %H:%M') if job.started_at else em
+            str_finished = job.finished_at.strftime('%Y-%m-%d %H:%M') if job.finished_at else em
+            triggered = job.triggered_by or em
             html += f"""<tr>
-<td><a href="/jobs/{job.id}" style="color:var(--accent)">{job.id}</a></td>
-<td>{job.job_type}</td>
-<td>{server_name}</td>
+<td><a href="/jobs/{job.id}" style="color:var(--accent);text-decoration:none;font-weight:600">{job.id}</a></td>
+<td style="font-weight:500">{job.job_type}</td>
+<td style="color:var(--text-secondary)">{server_name}</td>
 <td>{status_badge}</td>
-<td style="font-size:12px">{job.started_at.strftime('%Y-%m-%d %H:%M') if job.started_at else '—'}</td>
-<td style="font-size:12px">{job.finished_at.strftime('%Y-%m-%d %H:%M') if job.finished_at else '—'}</td>
-<td>{job.triggered_by or '—'}</td>
+<td style="font-size:12px;color:var(--text-secondary)">{str_started}</td>
+<td style="font-size:12px;color:var(--text-secondary)">{str_finished}</td>
+<td style="color:var(--text-secondary)">{triggered}</td>
 </tr>"""
         html += '</tbody></table>'
     html += '</div>' + BASE_TEMPLATE_END
@@ -97,7 +101,11 @@ async def job_detail(request: Request, job_id: int, db: AsyncSession = Depends(g
     if not job:
         return HTMLResponse(content=BASE_TEMPLATE_START + '<div class="card"><div class="empty-state">Job not found.</div></div>' + BASE_TEMPLATE_END)
 
-    server_name = job.server.name if job.server else "—"
+    em_job = "\u2014"
+    started_str = job.started_at.strftime('%Y-%m-%d %H:%M:%S') if job.started_at else em_job
+    finished_str = job.finished_at.strftime('%Y-%m-%d %H:%M:%S') if job.finished_at else em_job
+    triggered_by = job.triggered_by or em_job
+    server_name = job.server.name if job.server else em_job
 
     html = BASE_TEMPLATE_START
     html += f"""
@@ -105,14 +113,14 @@ async def job_detail(request: Request, job_id: int, db: AsyncSession = Depends(g
 <div class="card-head"><h2>Job #{job.id}: {job.job_type}</h2></div>
 <div class="kpi-row">
 <div class="kpi"><div class="kpi-label">Status</div><div class="kpi-value">{job.status}</div></div>
-<div class="kpi"><div class="kpi-label">Server</div><div class="kpi-value" style="font-size:14px">{server_name}</div></div>
-<div class="kpi"><div class="kpi-label">Triggered By</div><div class="kpi-value" style="font-size:14px">{job.triggered_by or '—'}</div></div>
+<div class="kpi"><div class="kpi-label">Server</div><div class="kpi-value" style="font-size:16px;font-weight:600">{server_name}</div></div>
+<div class="kpi"><div class="kpi-label">Triggered By</div><div class="kpi-value" style="font-size:16px;font-weight:600">{triggered_by}</div></div>
 </div>
 <div class="card-head"><h2>Log Output</h2></div>
 <div class="job-log-viewer">{job.log_text or '(no output)'}</div>
-<div style="padding:16px 20px;font-size:12px;color:var(--text-faint)">
-Started: {job.started_at.strftime('%Y-%m-%d %H:%M:%S') if job.started_at else '—'} ·
-Finished: {job.finished_at.strftime('%Y-%m-%d %H:%M:%S') if job.finished_at else '—'}
+<div style="padding:12px 20px 16px;font-size:12px;color:var(--text-muted)">
+Started: {started_str} &middot;
+Finished: {finished_str}
 </div>
 </div>
 """

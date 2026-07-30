@@ -41,12 +41,12 @@ async def provisioning_page(request: Request, db: AsyncSession = Depends(get_db)
     html += """
 <div class="card">
 <div class="card-head"><h2>Provisioning Wizard</h2></div>
-<div style="padding:20px">
+    <div style="padding:20px">
 <form id="provision-form" onsubmit="submitProvision(event)">
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<div class="provision-grid">
 <div>
-<label>Provisioning Type</label>
-<select name="job_type" id="prov-type" onchange="toggleFormFields()" required style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
+<label class="reset-field-label">Provisioning Type</label>
+<select name="job_type" id="prov-type" onchange="toggleFormFields()" required class="reset-input">
 <option value="">Select type...</option>
 <option value="new_instance">Add Instance to Existing Server</option>
 <option value="new_server">Onboard New Server</option>
@@ -55,54 +55,54 @@ async def provisioning_page(request: Request, db: AsyncSession = Depends(get_db)
 <div id="instance-fields">
 """
     if servers_with_ssh:
-        html += '<label>Target Server</label>'
-        html += '<select name="server_id" id="prov-server" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">'
+        html += '<label class="reset-field-label">Target Server</label>'
+        html += '<select name="server_id" id="prov-server" class="reset-input">'
         html += '<option value="">Select server...</option>'
         for srv in servers_with_ssh:
             html += f'<option value="{srv.id}">{srv.name} ({srv.ssh_host})</option>'
         html += '</select>'
     else:
-        html += '<div style="color:var(--text-faint);font-size:13px;margin-bottom:14px">No servers with SSH configured yet. Use "Onboard New Server" below.</div>'
+        html += '<div style="color:var(--text-muted);font-size:13px;margin-bottom:14px">No servers with SSH configured yet. Use "Onboard New Server" below.</div>'
         html += '<input type="hidden" name="server_id" value="0">'
     html += """
-<label>Instance Domain</label>
-<input type="text" name="domain" id="prov-domain" placeholder="trade1.example.com" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>Broker</label>
-<select name="broker" id="prov-broker" onchange="toggleXtsFields()" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
+<label class="reset-field-label">Instance Domain</label>
+<input class="reset-input" type="text" name="domain" id="prov-domain" placeholder="trade1.example.com">
+<label class="reset-field-label">Broker</label>
+<select name="broker" id="prov-broker" onchange="toggleXtsFields()" class="reset-input">
 <option value="">Select broker...</option>
 """
     for b in VALID_BROKERS:
         html += f'<option value="{b}">{b}</option>'
     html += """
 </select>
-<label>API Key</label>
-<input type="text" name="api_key" id="prov-api-key" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>API Secret</label>
-<input type="password" name="api_secret" id="prov-api-secret" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
+<label class="reset-field-label">API Key</label>
+<input class="reset-input" type="text" name="api_key" id="prov-api-key">
+<label class="reset-field-label">API Secret</label>
+<input class="reset-input" type="password" name="api_secret" id="prov-api-secret">
 <div id="xts-fields" style="display:none">
-<label>Market Key <span style="color:var(--text-faint)">(XTS only)</span></label>
-<input type="text" name="market_key" id="prov-market-key" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>Market Secret <span style="color:var(--text-faint)">(XTS only)</span></label>
-<input type="password" name="market_secret" id="prov-market-secret" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
+<label class="reset-field-label">Market Key <span style="color:var(--text-muted)">(XTS only)</span></label>
+<input class="reset-input" type="text" name="market_key" id="prov-market-key">
+<label class="reset-field-label">Market Secret <span style="color:var(--text-muted)">(XTS only)</span></label>
+<input class="reset-input" type="password" name="market_secret" id="prov-market-secret">
 </div>
 </div>
 <div id="server-fields" style="display:none">
-<h3 style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text)">New Server SSH Access</h3>
-<label>Server Name</label>
-<input type="text" name="server_name" id="prov-server-name" placeholder="prod-us-east-1" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>SSH Host</label>
-<input type="text" name="ssh_host" id="prov-ssh-host" placeholder="192.168.1.100" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>SSH Port</label>
-<input type="number" name="ssh_port" id="prov-ssh-port" value="22" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>SSH User</label>
-<input type="text" name="ssh_user" id="prov-ssh-user" value="ubuntu" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:inherit">
-<label>SSH Private Key</label>
-<textarea name="ssh_key" id="prov-ssh-key" rows="5" placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;..." style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:12px;font-family:var(--mono);resize:vertical"></textarea>
-<label>Host Public Key <span style="color:var(--text-faint)">(optional, pin for security)</span></label>
-<input type="text" name="host_key" id="prov-host-key" placeholder="ssh-ed25519 AAAAC3... or leave blank to auto-accept" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:12px;font-family:var(--mono)">
+<h3 style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text-primary)">New Server SSH Access</h3>
+<label class="reset-field-label">Server Name</label>
+<input class="reset-input" type="text" name="server_name" id="prov-server-name" placeholder="prod-us-east-1">
+<label class="reset-field-label">SSH Host</label>
+<input class="reset-input" type="text" name="ssh_host" id="prov-ssh-host" placeholder="192.168.1.100">
+<label class="reset-field-label">SSH Port</label>
+<input class="reset-input" type="number" name="ssh_port" id="prov-ssh-port" value="22">
+<label class="reset-field-label">SSH User</label>
+<input class="reset-input" type="text" name="ssh_user" id="prov-ssh-user" value="ubuntu">
+<label class="reset-field-label">SSH Private Key</label>
+<textarea name="ssh_key" id="prov-ssh-key" rows="5" placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;..." class="mono" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:12px;resize:vertical"></textarea>
+<label class="reset-field-label">Host Public Key <span style="color:var(--text-muted)">(optional, pin for security)</span></label>
+<input type="text" name="host_key" id="prov-host-key" placeholder="ssh-ed25519 AAAAC3... or leave blank to auto-accept" class="reset-input mono">
 </div>
 </div>
-<div style="margin-top:4px;padding:12px;background:var(--danger-soft);border:1px solid rgba(244,88,110,.35);border-radius:var(--radius-sm);font-size:13px;color:var(--danger)">
+<div style="margin-top:4px;padding:12px;background:var(--danger-soft);border:1px solid rgba(239,68,68,.3);border-radius:var(--radius-sm);font-size:13px;color:var(--danger)">
 <strong>Warning:</strong> This runs root-level scripts on the remote server. Broker API secrets will be written to a temp file on the remote machine briefly. Confirm before proceeding.
 </div>
 <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
@@ -110,7 +110,7 @@ async def provisioning_page(request: Request, db: AsyncSession = Depends(get_db)
 </div>
 </form>
 <div id="prov-result" style="margin-top:16px;display:none">
-<div class="card-head"><h2 id="prov-result-title">Provisioning...</h2></div>
+<div class="action-panel-head"><h2 id="prov-result-title">Provisioning...</h2></div>
 <div id="prov-log" class="job-log-viewer"></div>
 </div>
 </div>

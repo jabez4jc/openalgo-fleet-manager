@@ -27,11 +27,18 @@ BASE_TEMPLATE_START = """<!DOCTYPE html>
 <title>OpenAlgo Fleet Manager</title>
 <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 <div class="topbar">
-<div class="brand"><b>OpenAlgo Fleet Manager</b></div>
+<div class="brand">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+<b>OpenAlgo Fleet Manager</b>
+</div>
 <div class="topbar-right">
 <a href="/" class="nav-link active">Dashboard</a>
 <a href="/servers" class="nav-link">Servers</a>
@@ -121,7 +128,7 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
 <div class="card-head"><h2>Fleet Overview</h2>
 <div style="display:flex;gap:8px">
 <a href="/servers/add" class="btn btn-accent btn-sm">Add Server</a>
-<button class="btn btn-sm" onclick="location.reload()">Refresh</button>
+<button class="btn btn-ghost btn-sm" onclick="location.reload()">Refresh</button>
 </div>
 </div>
 <div class="kpi-row">
@@ -139,14 +146,14 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
         html += '<div class="card"><div class="card-head"><h2>Servers</h2></div><table><thead><tr><th>Server</th><th>URL</th><th>Instances</th><th>Healthy</th><th>Warning</th><th>Critical</th><th>Last Seen</th><th></th></tr></thead><tbody>'
         for row in server_rows:
             html += f"""<tr>
-<td><a href="/servers/{row['id']}" style="color:var(--accent);text-decoration:none;font-weight:600">{row['name']}</a></td>
-<td class="mono" style="font-size:12px">{row['base_url']}</td>
-<td>{row['instance_count']}</td>
+<td><a href="/servers/{row['id']}" class="mono" style="color:var(--accent);text-decoration:none;font-weight:600">{row['name']}</a></td>
+<td class="mono" style="font-size:12px;color:var(--text-secondary)">{row['base_url']}</td>
+<td style="font-weight:600">{row['instance_count']}</td>
 <td><span class="badge badge-healthy">{row['healthy']}</span></td>
 <td><span class="badge badge-warning">{row['warning']}</span></td>
 <td><span class="badge badge-critical">{row['critical']}</span></td>
-<td style="font-size:12px;color:var(--text-faint)">{'<script>document.write(fmtTime("'+row['last_seen']+'"))</script>' if row['last_seen'] else 'never'}</td>
-<td><a href="/servers/{row['id']}" class="btn btn-sm">View</a></td>
+<td style="font-size:12px;color:var(--text-muted)">{'<script>document.write(fmtTime("'+row['last_seen']+'"))</script>' if row['last_seen'] else 'never'}</td>
+<td><a href="/servers/{row['id']}" class="btn btn-sm btn-ghost">View</a></td>
 </tr>"""
         html += '</tbody></table></div>'
 

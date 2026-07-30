@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fleet Manager — Design Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="topbar">
+<div class="brand">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+<b>OpenAlgo Fleet Manager</b>
+</div>
+<div class="topbar-right">
+<a href="#" class="nav-link active">Dashboard</a>
+<a href="#" class="nav-link">Servers</a>
+<a href="#" class="nav-link">Provision</a>
+<a href="#" class="nav-link">Jobs</a>
+<a href="#" class="nav-link">Audit Log</a>
+<a href="#" class="nav-link">Logout</a>
+<span class="live"><span class="dot pulse"></span><span>Connected</span></span>
+</div>
+</div>
+
+<main style="max-width:900px">
+
+<div class="card">
+<div class="card-head"><h2>Fleet Overview</h2>
+<div style="display:flex;gap:8px">
+<a href="#" class="btn btn-accent btn-sm">Add Server</a>
+<button class="btn btn-ghost btn-sm">Refresh</button>
+</div>
+</div>
+<div class="kpi-row">
+<div class="kpi"><div class="kpi-label">Servers</div><div class="kpi-value">3</div></div>
+<div class="kpi"><div class="kpi-label">Instances</div><div class="kpi-value">12</div></div>
+<div class="kpi"><div class="kpi-label">Healthy</div><div class="kpi-value" style="color:var(--success)">9</div></div>
+<div class="kpi"><div class="kpi-label">Warning</div><div class="kpi-value" style="color:var(--warning)">2</div></div>
+<div class="kpi"><div class="kpi-label">Critical</div><div class="kpi-value" style="color:var(--danger)">1</div></div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-head"><h2>Typography</h2></div>
+<div style="padding:20px;display:flex;flex-direction:column;gap:8px">
+<div style="font-size:24px;font-weight:700">Heading — Inter 700 24px</div>
+<div style="font-size:20px;font-weight:650">Subheading — Inter 650 20px</div>
+<div style="font-size:16px;font-weight:600">Card title — Inter 600 16px</div>
+<div style="font-size:14px;font-weight:500">Body — Inter 500 14px</div>
+<div style="font-size:13px;font-weight:400">Small body — Inter 400 13px</div>
+<div style="font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-top:12px">TABLE HEADER — UPPERCASE 11.5px</div>
+<div class="mono" style="margin-top:8px">console.log("Monospace — JetBrains Mono 12px");</div>
+<div class="mono" style="font-size:11.5px">[2026-07-30 12:00:00] Log output — JetBrains Mono 11.5px</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-head"><h2>Color Palette</h2></div>
+<div style="padding:20px;display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
+<div style="padding:16px;border-radius:var(--radius-md);background:var(--bg-deep);border:1px solid var(--border)"><div style="font-size:11px;color:var(--text-muted)">bg-deep</div><div style="font-size:11px;color:var(--text-muted);font-family:monospace">#070b14</div></div>
+<div style="padding:16px;border-radius:var(--radius-md);background:var(--bg);border:1px solid var(--border)"><div style="font-size:11px;color:var(--text-muted)">bg</div><div style="font-size:11px;color:var(--text-muted);font-family:monospace">#0c1123</div></div>
+<div style="padding:16px;border-radius:var(--radius-md);background:var(--bg-elevated);border:1px solid var(--border)"><div style="font-size:11px;color:var(--text-muted)">bg-elevated</div><div style="font-size:11px;color:var(--text-muted);font-family:monospace">#111728</div></div>
+<div style="padding:16px;border-radius:var(--radius-md);background:var(--bg-inset);border:1px solid var(--border)"><div style="font-size:11px;color:var(--text-muted)">bg-inset</div><div style="font-size:11px;color:var(--text-muted);font-family:monospace">#161e33</div></div>
+<div style="padding:16px;border-radius:var(--radius-md);background:#fff;border:1px solid var(--border)"><div style="font-size:11px;color:#333">Text</div><div style="font-size:11px;color:#333;font-family:monospace">#e2e8f0</div></div>
+</div>
+<div style="padding:0 20px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+<div style="padding:16px;border-radius:var(--radius-md);background:var(--accent-soft);border:1px solid var(--accent)"><div style="font-size:11px;color:var(--accent)">accent</div><div style="font-size:11px;color:var(--accent);font-family:monospace">#3b82f6</div></div>
+<div style="padding:16px;border-radius:var(--radius-md);background:var(--success-soft);border:1px solid var(--success)"><div style="font-size:11px;color:var(--success)">success</div><div style="font-size:11px;color:var(--success);font-family:monospace">#22c55e</div></div>
+<div style="padding:16px;border-radius:var(--radius-md);background:var(--warning-soft);border:1px solid var(--warning)"><div style="font-size:11px;color:var(--warning)">warning</div><div style="font-size:11px;color:var(--warning);font-family:monospace">#eab308</div></div>
+<div style="padding:16px;border-radius:var(--radius-md);background:var(--danger-soft);border:1px solid var(--danger)"><div style="font-size:11px;color:var(--danger)">danger</div><div style="font-size:11px;color:var(--danger);font-family:monospace">#ef4444</div></div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-head"><h2>Buttons</h2></div>
+<div style="padding:20px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+<button class="btn">Default</button>
+<button class="btn btn-sm">Small</button>
+<button class="btn btn-accent">Accent</button>
+<button class="btn btn-ghost">Ghost</button>
+<button class="btn btn-sm btn-accent">Small Accent</button>
+<button class="btn btn-danger">Danger</button>
+<button class="btn btn-success">Success</button>
+<button class="btn btn-warning">Warning</button>
+</div>
+</div>
+
+<div class="card">
+<div class="card-head"><h2>Badges & Status</h2></div>
+<div style="padding:20px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+<span class="badge badge-healthy">healthy</span>
+<span class="badge badge-warning">warning</span>
+<span class="badge badge-critical">critical</span>
+<span class="badge badge-unreachable">unreachable</span>
+<span class="badge badge-unknown">unknown</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-head"><h2>Table</h2></div>
+<table><thead><tr><th>Server</th><th>URL</th><th>Instances</th><th>Healthy</th><th>Warning</th><th>Critical</th><th>Last Seen</th><th></th></tr></thead>
+<tbody>
+<tr>
+<td><a href="#" style="color:var(--accent);text-decoration:none;font-weight:600">prod-us-east-1</a></td>
+<td class="mono" style="font-size:12px;color:var(--text-secondary)">https://trade1.example.com</td>
+<td style="font-weight:600">4</td>
+<td><span class="badge badge-healthy">3</span></td>
+<td><span class="badge badge-warning">1</span></td>
+<td><span class="badge badge-critical">0</span></td>
+<td style="font-size:12px;color:var(--text-muted)">Jul 30, 12:00</td>
+<td><button class="btn btn-sm btn-ghost">View</button></td>
+</tr>
+<tr>
+<td><a href="#" style="color:var(--accent);text-decoration:none;font-weight:600">prod-eu-west-1</a></td>
+<td class="mono" style="font-size:12px;color:var(--text-secondary)">https://trade2.example.com</td>
+<td style="font-weight:600">6</td>
+<td><span class="badge badge-healthy">4</span></td>
+<td><span class="badge badge-warning">1</span></td>
+<td><span class="badge badge-critical">1</span></td>
+<td style="font-size:12px;color:var(--text-muted)">Jul 30, 11:58</td>
+<td><button class="btn btn-sm btn-ghost">View</button></td>
+</tr>
+</tbody></table>
+</div>
+
+<div class="card">
+<div class="card-head"><h2>Server Detail</h2></div>
+<div class="server-meta">
+<div class="server-meta-item"><span class="server-meta-label">URL</span><span class="server-meta-value">https://trade1.example.com</span></div>
+<div class="server-meta-item"><span class="server-meta-label">Admin</span><span>fleetmgr</span></div>
+<div class="server-meta-item"><span class="server-meta-label">SSH</span><span>ubuntu@192.168.1.10:22</span></div>
+<div class="server-meta-item"><span class="server-meta-label">Instances</span><span style="font-weight:600">4</span></div>
+<div class="server-meta-item"><span class="server-meta-label">Last poll</span><span class="mono">2026-07-30 12:00:00</span></div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-head"><h2>Action Panel</h2></div>
+<div class="action-bar">
+<button class="btn btn-sm">Restart All</button>
+<button class="btn btn-sm btn-success">Health Check All</button>
+<button class="btn btn-sm">Update All</button>
+<button class="btn btn-sm btn-danger">Reboot Server</button>
+</div>
+<div class="section-divider">
+<button class="btn btn-sm">Run Backup</button>
+<button class="btn btn-sm">Backup List</button>
+<button class="btn btn-sm">Patch Self-Test</button>
+</div>
+</div>
+
+<div class="card">
+<div class="card-head"><h2>Log Viewer</h2></div>
+<div class="job-log-viewer">[2026-07-30 12:00:01] Connecting via SSH...
+[2026-07-30 12:00:02] Writing config file on remote server...
+[2026-07-30 12:00:05] Running multi-install.sh...
+[2026-07-30 12:00:45] multi-install.sh completed successfully
+[2026-07-30 12:00:45] Setting admin password...
+[2026-07-30 12:00:46] Provisioning complete.</div>
+</div>
+
+<div class="card">
+<div class="card-head"><h2>Form Elements</h2></div>
+<div style="padding:20px">
+<label class="reset-field-label">Server Name</label>
+<input class="reset-input" type="text" placeholder="e.g. prod-server-1">
+<label class="reset-field-label">Admin API URL</label>
+<input class="reset-input" type="text" placeholder="https://server-ip:8888">
+<label class="reset-field-label">Broker</label>
+<select class="reset-input">
+<option>zerodha</option>
+<option>angel</option>
+<option>upstox</option>
+</select>
+<label class="reset-field-label">SSH Private Key</label>
+<textarea class="mono" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:12px;min-height:80px;resize:vertical" placeholder="-----BEGIN RSA PRIVATE KEY-----"></textarea>
+<hr style="border-color:var(--border);margin:16px 0">
+<div style="display:flex;gap:10px;justify-content:flex-end">
+<button class="btn">Cancel</button>
+<button class="btn btn-accent">Save Changes</button>
+</div>
+</div>
+</div>
+
+</main>
+</body>
+</html>
