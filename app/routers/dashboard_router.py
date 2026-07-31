@@ -38,7 +38,7 @@ BASE_TEMPLATE_START = """<!DOCTYPE html>
 <div class="app-shell">
 <aside class="sidebar" id="sidebar">
 <div class="brand">
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+<div class="brand-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M12 5v14"/></svg></div>
 <div><b>OpenAlgo Fleet</b><small>Operations console</small></div>
 </div>
 <div class="sidebar-section-label">Operate</div>
@@ -62,7 +62,8 @@ BASE_TEMPLATE_START = """<!DOCTYPE html>
 <div class="breadcrumb"><span>OpenAlgo</span><strong>Fleet Manager</strong></div>
 </div>
 <div class="topbar-right">
-<span class="live"><span class="dot pulse"></span><span id="last-updated">Loading...</span></span>
+<span class="live"><span class="dot pulse"></span><span id="last-updated">Poller live</span></span>
+<div class="user-chip"><span class="user-avatar">FM</span><span>Operations</span></div>
 </div>
 </header>
 <div id="toasts" role="status" aria-live="polite"></div>
@@ -145,12 +146,13 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
             "warning": srv_warning + srv_unknown,
             "critical": srv_critical + srv_unreachable + srv_gone,
             "last_seen": last_seen,
+            "status": "critical" if (srv_critical + srv_unreachable + srv_gone) else ("warning" if (srv_warning + srv_unknown) else "healthy"),
         })
 
     html = BASE_TEMPLATE_START
-    html += """
+    html += f"""
 <div class="page-intro">
-<div><div class="eyebrow">Fleet operations</div><h1>Good morning, operator.</h1><p>Monitor every OpenAlgo environment from one control plane.</p></div>
+<div><div class="eyebrow">OpenAlgo fleet</div><h1>Fleet overview</h1><p>{len(servers)} servers · {total_instances} instances · live health monitoring</p></div>
 <div class="page-actions"><a href="/servers/add" class="btn btn-accent">Add server</a><button class="btn btn-ghost" onclick="location.reload()">Refresh data</button></div>
 </div>
 """
@@ -169,6 +171,27 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
     if not servers:
         html += '<div class="card"><div class="empty-state">No servers registered. <a href="/servers/add" style="color:var(--accent)">Add your first server</a>.</div></div>'
     else:
+        html += '<div class="card"><div class="card-head"><div><h2>Server health</h2><div class="card-subtitle">At-a-glance state of each registered host</div></div><a href="/servers" class="btn btn-sm btn-ghost">Manage servers</a></div><div class="server-card-grid">'
+        for row in server_rows:
+            bar_count = max(6, min(12, row["instance_count"] or 6))
+            bars = []
+            for idx in range(bar_count):
+                if row["critical"] and idx == bar_count - 1:
+                    bar_class = "critical"
+                elif row["warning"] and idx >= bar_count - 2:
+                    bar_class = "warning"
+                elif row["healthy"] and idx < min(row["healthy"], bar_count):
+                    bar_class = "healthy"
+                else:
+                    bar_class = "muted"
+                bars.append(f'<span class="server-bar {bar_class}"></span>')
+            html += f"""<a class="server-card" href="/servers/{row['id']}">
+<div class="server-card-top"><strong>{_esc(row['name'])}</strong><span class="badge badge-{row['status']}">{row['status']}</span></div>
+<div class="server-card-host">{_esc(row['base_url'])}</div>
+<div class="server-bars" aria-label="{row['healthy']} healthy, {row['warning']} warning, {row['critical']} critical">{''.join(bars)}</div>
+<div class="server-card-bottom"><span>{row['instance_count']} instance{'s' if row['instance_count'] != 1 else ''}</span><span class="mono">{row['healthy']} healthy</span></div>
+</a>"""
+        html += '</div></div>'
         html += '<div class="card"><div class="card-head"><div><h2>Registered servers</h2><div class="card-subtitle">A live inventory of your OpenAlgo control plane</div></div><a href="/servers" class="btn btn-sm btn-ghost">View all servers</a></div><div class="table-wrap"><table><thead><tr><th>Server</th><th>URL</th><th>Instances</th><th>Healthy</th><th>Warning</th><th>Critical</th><th>Last Seen</th><th></th></tr></thead><tbody>'
         for row in server_rows:
             html += f"""<tr>
