@@ -100,8 +100,55 @@ document.querySelectorAll('[data-route]').forEach(link=>{
 const route=link.dataset.route;
 if(currentPath===route||(route!=='/'&&currentPath.startsWith(route))){link.classList.add('active');link.setAttribute('aria-current','page');}
 });
+function enhanceSelect(select){
+if(select.closest('.select-shell'))return;
+const shell=document.createElement('div');
+shell.className='select-shell';
+select.parentNode.insertBefore(shell,select);
+shell.appendChild(select);
+const trigger=document.createElement('button');
+trigger.type='button';
+trigger.className='select-trigger';
+trigger.setAttribute('aria-haspopup','listbox');
+const menu=document.createElement('div');
+menu.className='select-menu';
+menu.setAttribute('role','listbox');
+const sync=()=>{
+const selected=select.options[select.selectedIndex]||select.options[0];
+trigger.firstChild?trigger.firstChild.textContent=selected?selected.textContent:'' : trigger.appendChild(document.createTextNode(selected?selected.textContent:''));
+menu.querySelectorAll('.select-option').forEach(option=>option.classList.toggle('selected',option.dataset.value===select.value));
+};
+Array.from(select.options).forEach(option=>{
+const item=document.createElement('button');
+item.type='button';
+item.className='select-option';
+item.textContent=option.textContent;
+item.dataset.value=option.value;
+item.setAttribute('role','option');
+item.addEventListener('click',()=>{
+select.value=option.value;
+select.dispatchEvent(new Event('change',{bubbles:true}));
+sync();
+shell.classList.remove('open');
+});
+menu.appendChild(item);
+});
+trigger.addEventListener('click',()=>{
+document.querySelectorAll('.select-shell.open').forEach(other=>{if(other!==shell)other.classList.remove('open');});
+shell.classList.toggle('open');
+});
+select.addEventListener('change',sync);
+shell.appendChild(trigger);
+shell.appendChild(menu);
+shell.classList.add('is-enhanced');
+sync();
+}
+document.querySelectorAll('select.reset-input, .filter-bar select, .dialog select').forEach(enhanceSelect);
+document.addEventListener('click',event=>{
+if(!event.target.closest('.select-shell'))document.querySelectorAll('.select-shell.open').forEach(shell=>shell.classList.remove('open'));
+});
 const updatedEl=document.getElementById('last-updated');
-if(updatedEl)updatedEl.textContent='Live · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+if(updatedEl)updatedEl.textContent='poller live · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 </script>
 </body>
 </html>"""

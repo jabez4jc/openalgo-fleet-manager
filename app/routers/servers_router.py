@@ -5,6 +5,7 @@ from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.database import get_db
 from app.models import Server, Instance
@@ -22,6 +23,13 @@ def _esc(value: object) -> str:
 def _js_arg(value: str | None) -> str:
     """Encode a string for a quoted inline handler without breaking the page."""
     return _esc(json.dumps(value or ""), quote=True)
+
+
+def _format_dt(value: object, fmt: str, fallback: str = "never") -> str:
+    if not value:
+        return fallback
+    formatter = getattr(value, "strftime", None)
+    return formatter(fmt) if formatter else _esc(value)
 
 
 @router.get("", response_class=HTMLResponse)
@@ -143,12 +151,14 @@ async def add_server_submit(
 
 @router.get("/{server_id}", response_class=HTMLResponse)
 async def server_detail(request: Request, server_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Server).where(Server.id == server_id))
+    result = await db.execute(
+        select(Server).options(selectinload(Server.instances)).where(Server.id == server_id)
+    )
     server = result.scalar_one_or_none()
     if not server:
-        return HTMLResponse(content=BASE_TEMPLATE_START + '<div class="card"><div class="empty-state">Server not found.</div></div>' + BASE_TEMPLATE_END)
+        return HTMLResponse(content=BASE_TEMPLATE_START + '<div class="card"><div class="empty-state">Server not found.</div></div>' + BASE_TEMPLATE_END, status_code=404)
 
-    instances = server.instances
+    instances = list(server.instances or [])
     em = "\u2014"
     ssh_info = f"{server.ssh_user}@{server.ssh_host}:{server.ssh_port}" if server.ssh_host else em
 
@@ -167,7 +177,7 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
 <div class="server-meta-item"><span class="server-meta-label">Admin</span><span>{_esc(server.admin_username)}</span></div>
 <div class="server-meta-item"><span class="server-meta-label">SSH</span><span>{_esc(ssh_info)}</span></div>
 <div class="server-meta-item"><span class="server-meta-label">Instances</span><span style="font-weight:600">{len(instances)}</span></div>
-<div class="server-meta-item"><span class="server-meta-label">Last poll</span><span class="mono">{server.last_seen_at.strftime('%Y-%m-%d %H:%M:%S') if server.last_seen_at else 'never'}</span></div>
+<div class="server-meta-item"><span class="server-meta-label">Last poll</span><span class="mono">{_format_dt(server.last_seen_at, '%Y-%m-%d %H:%M:%S')}</span></div>
 </div>
 </div>
 """
@@ -201,7 +211,7 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
                 status_badge = '<span class="badge badge-unknown">' + _esc(st) + '</span>'
 
             em = "\u2014"
-            poll_time = inst.last_polled_at.strftime("%H:%M:%S") if inst.last_polled_at else "never"
+            poll_time = _format_dt(inst.last_polled_at, "%H:%M:%S")
 
             html += f"""<tr>
 <td style="font-weight:600">{_esc(inst.instance_name)}</td>
