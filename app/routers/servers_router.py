@@ -16,8 +16,8 @@ from app.routers.dashboard_router import BASE_TEMPLATE_START, BASE_TEMPLATE_END
 router = APIRouter(prefix="/servers", tags=["servers"])
 
 
-def _esc(value: object) -> str:
-    return _html.escape(str(value or ""))
+def _esc(value: object, quote: bool = True) -> str:
+    return _html.escape(str(value or ""), quote=quote)
 
 
 def _js_arg(value: str | None) -> str:
