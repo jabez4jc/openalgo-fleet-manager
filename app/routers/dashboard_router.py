@@ -1,3 +1,5 @@
+from html import escape as _esc
+
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,27 +35,44 @@ BASE_TEMPLATE_START = """<!DOCTYPE html>
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<div class="topbar">
+<div class="app-shell">
+<aside class="sidebar" id="sidebar">
 <div class="brand">
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-<b>OpenAlgo Fleet Manager</b>
+<div><b>OpenAlgo Fleet</b><small>Operations console</small></div>
+</div>
+<div class="sidebar-section-label">Operate</div>
+<nav class="sidebar-nav" aria-label="Primary navigation">
+<a href="/" class="nav-link" data-route="/"><span>Overview</span></a>
+<a href="/servers" class="nav-link" data-route="/servers"><span>Servers</span></a>
+<a href="/provision" class="nav-link" data-route="/provision"><span>Provision</span></a>
+<a href="/jobs" class="nav-link" data-route="/jobs"><span>Jobs</span></a>
+<div class="sidebar-section-label" style="margin-top:25px">Governance</div>
+<a href="/audit" class="nav-link" data-route="/audit"><span>Audit log</span></a>
+</nav>
+<div class="sidebar-footer">
+<div class="sidebar-status"><span class="dot pulse"></span><span>Monitoring active</span></div>
+<a href="/logout" class="nav-link"><span>Sign out</span></a>
+</div>
+</aside>
+<div class="app-main">
+<header class="topbar">
+<div class="topbar-left">
+<button class="menu-toggle" type="button" aria-label="Open navigation" onclick="document.body.classList.toggle('sidebar-open')">☰</button>
+<div class="breadcrumb"><span>OpenAlgo</span><strong>Fleet Manager</strong></div>
 </div>
 <div class="topbar-right">
-<a href="/" class="nav-link active">Dashboard</a>
-<a href="/servers" class="nav-link">Servers</a>
-<a href="/provision" class="nav-link">Provision</a>
-<a href="/jobs" class="nav-link">Jobs</a>
-<a href="/audit" class="nav-link">Audit Log</a>
-<a href="/logout" class="nav-link">Logout</a>
 <span class="live"><span class="dot pulse"></span><span id="last-updated">Loading...</span></span>
 </div>
-</div>
+</header>
 <div id="toasts" role="status" aria-live="polite"></div>
 <main>
 """
 
 BASE_TEMPLATE_END = """
 </main>
+</div>
+</div>
 <script>
 function showToast(msg,type){
 const list=document.getElementById('toasts');
@@ -75,6 +94,13 @@ function escHtml(s){
 const m={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'};
 return String(s||'').replace(/[&<>"']/g,c=>m[c]);
 }
+const currentPath=window.location.pathname;
+document.querySelectorAll('[data-route]').forEach(link=>{
+const route=link.dataset.route;
+if(currentPath===route||(route!=='/'&&currentPath.startsWith(route))){link.classList.add('active');link.setAttribute('aria-current','page');}
+});
+const updatedEl=document.getElementById('last-updated');
+if(updatedEl)updatedEl.textContent='Live · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 </script>
 </body>
 </html>"""
@@ -122,36 +148,37 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
         })
 
     html = BASE_TEMPLATE_START
+    html += """
+<div class="page-intro">
+<div><div class="eyebrow">Fleet operations</div><h1>Good morning, operator.</h1><p>Monitor every OpenAlgo environment from one control plane.</p></div>
+<div class="page-actions"><a href="/servers/add" class="btn btn-accent">Add server</a><button class="btn btn-ghost" onclick="location.reload()">Refresh data</button></div>
+</div>
+"""
     html += f"""
 <div class="card">
-<div class="card-head"><h2>Fleet Overview</h2>
-<div style="display:flex;gap:8px">
-<a href="/servers/add" class="btn btn-accent btn-sm">Add Server</a>
-<button class="btn btn-ghost btn-sm" onclick="location.reload()">Refresh</button>
-</div>
-</div>
+<div class="card-head"><div><h2>Fleet overview</h2><div class="card-subtitle">Current status across registered environments</div></div></div>
 <div class="kpi-row">
-<div class="kpi"><div class="kpi-label">Servers</div><div class="kpi-value">{len(servers)}</div></div>
-<div class="kpi"><div class="kpi-label">Instances</div><div class="kpi-value">{total_instances}</div></div>
-<div class="kpi"><div class="kpi-label">Healthy</div><div class="kpi-value" style="color:var(--success)">{healthy_count}</div></div>
-<div class="kpi"><div class="kpi-label">Warning</div><div class="kpi-value" style="color:var(--warning)">{warning_count}</div></div>
-<div class="kpi"><div class="kpi-label">Critical</div><div class="kpi-value" style="color:var(--danger)">{critical_count}</div></div>
+<div class="kpi"><div class="kpi-label">Servers</div><div class="kpi-value">{len(servers)}</div><div class="kpi-detail">registered environments</div></div>
+<div class="kpi"><div class="kpi-label">Instances</div><div class="kpi-value">{total_instances}</div><div class="kpi-detail">discovered workloads</div></div>
+<div class="kpi"><div class="kpi-label">Healthy</div><div class="kpi-value" style="color:var(--success)">{healthy_count}</div><div class="kpi-detail">operating normally</div></div>
+<div class="kpi"><div class="kpi-label">Warning</div><div class="kpi-value" style="color:var(--warning)">{warning_count}</div><div class="kpi-detail">needs attention</div></div>
+<div class="kpi"><div class="kpi-label">Critical</div><div class="kpi-value" style="color:var(--danger)">{critical_count}</div><div class="kpi-detail">requires action</div></div>
 </div>
 </div>
 """
     if not servers:
         html += '<div class="card"><div class="empty-state">No servers registered. <a href="/servers/add" style="color:var(--accent)">Add your first server</a>.</div></div>'
     else:
-        html += '<div class="card"><div class="card-head"><h2>Servers</h2></div><div class="table-wrap"><table><thead><tr><th>Server</th><th>URL</th><th>Instances</th><th>Healthy</th><th>Warning</th><th>Critical</th><th>Last Seen</th><th></th></tr></thead><tbody>'
+        html += '<div class="card"><div class="card-head"><div><h2>Registered servers</h2><div class="card-subtitle">A live inventory of your OpenAlgo control plane</div></div><a href="/servers" class="btn btn-sm btn-ghost">View all servers</a></div><div class="table-wrap"><table><thead><tr><th>Server</th><th>URL</th><th>Instances</th><th>Healthy</th><th>Warning</th><th>Critical</th><th>Last Seen</th><th></th></tr></thead><tbody>'
         for row in server_rows:
             html += f"""<tr>
-<td><a href="/servers/{row['id']}" class="mono" style="color:var(--accent);text-decoration:none;font-weight:600">{row['name']}</a></td>
-<td class="mono" style="font-size:12px;color:var(--text-secondary)">{row['base_url']}</td>
+<td><a href="/servers/{row['id']}" class="mono">{_esc(row['name'])}</a></td>
+<td class="mono">{_esc(row['base_url'])}</td>
 <td style="font-weight:600">{row['instance_count']}</td>
 <td><span class="badge badge-healthy">{row['healthy']}</span></td>
 <td><span class="badge badge-warning">{row['warning']}</span></td>
 <td><span class="badge badge-critical">{row['critical']}</span></td>
-<td style="font-size:12px;color:var(--text-muted)">{'<script>document.write(fmtTime("'+row['last_seen']+'"))</script>' if row['last_seen'] else 'never'}</td>
+<td style="font-size:12px;color:var(--text-muted)">{_esc(row['last_seen']) if row['last_seen'] else 'never'}</td>
 <td><a href="/servers/{row['id']}" class="btn btn-sm btn-ghost">View</a></td>
 </tr>"""
         html += '</tbody></table></div></div>'

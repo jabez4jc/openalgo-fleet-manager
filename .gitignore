@@ -4,3 +4,4 @@ __pycache__/
 .env
 *.log
 pgdata/
+.DS_Store

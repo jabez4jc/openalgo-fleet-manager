@@ -1,4 +1,5 @@
 import json
+import html as _html
 import logging
 import secrets
 from datetime import datetime, timezone
@@ -31,6 +32,10 @@ VALID_BROKERS = [
 XTS_BROKERS = ["fivepaisaxts", "compositedge", "ibulls", "iifl", "jainamxts", "rmoney", "wisdom"]
 
 
+def _esc(value: object) -> str:
+    return _html.escape(str(value or ""))
+
+
 @router.get("", response_class=HTMLResponse)
 async def provisioning_page(request: Request, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Server).order_by(Server.name))
@@ -39,8 +44,11 @@ async def provisioning_page(request: Request, db: AsyncSession = Depends(get_db)
 
     html = BASE_TEMPLATE_START
     html += """
+<div class="page-intro">
+<div><div class="eyebrow">Infrastructure</div><h1>Provision</h1><p>Deploy a new OpenAlgo instance or onboard a server with guided checks.</p></div>
+</div>
 <div class="card">
-<div class="card-head"><h2>Provisioning Wizard</h2></div>
+<div class="card-head"><div><h2>Provisioning wizard</h2><div class="card-subtitle">Remote installation and configuration</div></div></div>
     <div style="padding:20px">
 <form id="provision-form" onsubmit="submitProvision(event)">
 <div class="provision-grid">
@@ -59,7 +67,7 @@ async def provisioning_page(request: Request, db: AsyncSession = Depends(get_db)
         html += '<select name="server_id" id="prov-server" class="reset-input">'
         html += '<option value="">Select server...</option>'
         for srv in servers_with_ssh:
-            html += f'<option value="{srv.id}">{srv.name} ({srv.ssh_host})</option>'
+            html += f'<option value="{srv.id}">{_esc(srv.name)} ({_esc(srv.ssh_host)})</option>'
         html += '</select>'
     else:
         html += '<div style="color:var(--text-muted);font-size:13px;margin-bottom:14px">No servers with SSH configured yet. Use "Onboard New Server" below.</div>'
@@ -72,7 +80,7 @@ async def provisioning_page(request: Request, db: AsyncSession = Depends(get_db)
 <option value="">Select broker...</option>
 """
     for b in VALID_BROKERS:
-        html += f'<option value="{b}">{b}</option>'
+        html += f'<option value="{_esc(b)}">{_esc(b)}</option>'
     html += """
 </select>
 <label class="reset-field-label">API Key</label>
@@ -195,7 +203,10 @@ async def submit_provision(request: Request, db: AsyncSession = Depends(get_db))
     if job_type == "new_server":
         server_name = body.get("server_name", "").strip()
         ssh_host = body.get("ssh_host", "").strip()
-        ssh_port = int(body.get("ssh_port", 22))
+        try:
+            ssh_port = int(body.get("ssh_port", 22))
+        except (TypeError, ValueError):
+            return JSONResponse({"error": "SSH port must be a number"}, status_code=400)
         ssh_user = body.get("ssh_user", "").strip()
         ssh_key_pem = body.get("ssh_key", "").strip()
         host_key = body.get("host_key", "").strip() or None
@@ -238,7 +249,10 @@ async def submit_provision(request: Request, db: AsyncSession = Depends(get_db))
         _run_new_server(server, job.id, admin_pw, domain, broker, api_key, api_secret, market_key, market_secret, instance_name)
         return JSONResponse({"job_id": str(job.id), "status": "queued", "server_id": server.id})
 
-    server_id = int(body.get("server_id", 0))
+    try:
+        server_id = int(body.get("server_id", 0))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "A valid target server is required"}, status_code=400)
     result = await db.execute(select(Server).where(Server.id == server_id))
     server = result.scalar_one_or_none()
     if not server:

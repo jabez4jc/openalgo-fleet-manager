@@ -39,8 +39,11 @@ async def audit_log_page(
 
     html = BASE_TEMPLATE_START
     html += f"""
+<div class="page-intro">
+<div><div class="eyebrow">Governance</div><h1>Audit log</h1><p>Review every sign-in, change, and fleet action.</p></div>
+</div>
 <div class="card">
-<div class="card-head"><h2>Audit Log</h2></div>
+<div class="card-head"><div><h2>Activity history</h2><div class="card-subtitle">Latest 200 recorded events</div></div></div>
 <div class="filter-bar">
 <form method="GET" action="/audit">
 <input type="text" name="search" value="{_esc(search)}" placeholder="Search actor, action, instance...">

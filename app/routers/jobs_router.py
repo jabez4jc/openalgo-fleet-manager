@@ -1,3 +1,5 @@
+from html import escape as _html_escape
+
 from fastapi import APIRouter, Request, Depends, Query
 from fastapi.responses import JSONResponse, HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +12,10 @@ from app.services.admin_api import AdminAPISession
 from app.routers.dashboard_router import BASE_TEMPLATE_START, BASE_TEMPLATE_END
 
 router = APIRouter(tags=["jobs"])
+
+
+def _esc(value: object) -> str:
+    return _html_escape(str(value or ""))
 
 
 @router.get("/api/jobs/{job_id}")
@@ -57,8 +63,11 @@ async def jobs_page(request: Request, db: AsyncSession = Depends(get_db)):
 
     html = BASE_TEMPLATE_START
     html += """
+<div class="page-intro">
+<div><div class="eyebrow">Operations</div><h1>Jobs</h1><p>Track provisioning, backup, and maintenance work across the fleet.</p></div>
+</div>
 <div class="card">
-<div class="card-head"><h2>Jobs History</h2></div>
+<div class="card-head"><div><h2>Job history</h2><div class="card-subtitle">Most recent 100 jobs</div></div></div>
 """
     if not jobs:
         html += '<div class="empty-state">No provisioning jobs yet.</div>'
@@ -74,20 +83,20 @@ async def jobs_page(request: Request, db: AsyncSession = Depends(get_db)):
             elif job.status == "running":
                 status_badge = '<span class="badge badge-warning">running</span>'
             else:
-                status_badge = f'<span class="badge badge-unknown">{job.status}</span>'
+                status_badge = f'<span class="badge badge-unknown">{_esc(job.status)}</span>'
 
             em = "\u2014"
             str_started = job.started_at.strftime('%Y-%m-%d %H:%M') if job.started_at else em
             str_finished = job.finished_at.strftime('%Y-%m-%d %H:%M') if job.finished_at else em
             triggered = job.triggered_by or em
             html += f"""<tr>
-<td><a href="/jobs/{job.id}" style="color:var(--accent);text-decoration:none;font-weight:600">{job.id}</a></td>
-<td style="font-weight:500">{job.job_type}</td>
-<td style="color:var(--text-secondary)">{server_name}</td>
+<td><a href="/jobs/{job.id}">{job.id}</a></td>
+<td style="font-weight:500">{_esc(job.job_type)}</td>
+<td style="color:var(--text-secondary)">{_esc(server_name)}</td>
 <td>{status_badge}</td>
-<td style="font-size:12px;color:var(--text-secondary)">{str_started}</td>
-<td style="font-size:12px;color:var(--text-secondary)">{str_finished}</td>
-<td style="color:var(--text-secondary)">{triggered}</td>
+<td style="font-size:12px;color:var(--text-secondary)">{_esc(str_started)}</td>
+<td style="font-size:12px;color:var(--text-secondary)">{_esc(str_finished)}</td>
+<td style="color:var(--text-secondary)">{_esc(triggered)}</td>
 </tr>"""
         html += '</tbody></table></div>'
     html += '</div>' + BASE_TEMPLATE_END
@@ -110,17 +119,17 @@ async def job_detail(request: Request, job_id: int, db: AsyncSession = Depends(g
     html = BASE_TEMPLATE_START
     html += f"""
 <div class="card">
-<div class="card-head"><h2>Job #{job.id}: {job.job_type}</h2></div>
+<div class="card-head"><h2>Job #{job.id}: {_esc(job.job_type)}</h2></div>
 <div class="kpi-row">
-<div class="kpi"><div class="kpi-label">Status</div><div class="kpi-value">{job.status}</div></div>
-<div class="kpi"><div class="kpi-label">Server</div><div class="kpi-value" style="font-size:16px;font-weight:600">{server_name}</div></div>
-<div class="kpi"><div class="kpi-label">Triggered By</div><div class="kpi-value" style="font-size:16px;font-weight:600">{triggered_by}</div></div>
+<div class="kpi"><div class="kpi-label">Status</div><div class="kpi-value">{_esc(job.status)}</div></div>
+<div class="kpi"><div class="kpi-label">Server</div><div class="kpi-value" style="font-size:16px;font-weight:600">{_esc(server_name)}</div></div>
+<div class="kpi"><div class="kpi-label">Triggered By</div><div class="kpi-value" style="font-size:16px;font-weight:600">{_esc(triggered_by)}</div></div>
 </div>
 <div class="card-head"><h2>Log Output</h2></div>
-<div class="job-log-viewer">{job.log_text or '(no output)'}</div>
+<div class="job-log-viewer">{_esc(job.log_text or '(no output)')}</div>
 <div style="padding:12px 20px 16px;font-size:12px;color:var(--text-muted)">
-Started: {started_str} &middot;
-Finished: {finished_str}
+Started: {_esc(started_str)} &middot;
+Finished: {_esc(finished_str)}
 </div>
 </div>
 """

@@ -1,4 +1,5 @@
 import json
+import html as _html
 
 from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -14,6 +15,15 @@ from app.routers.dashboard_router import BASE_TEMPLATE_START, BASE_TEMPLATE_END
 router = APIRouter(prefix="/servers", tags=["servers"])
 
 
+def _esc(value: object) -> str:
+    return _html.escape(str(value or ""))
+
+
+def _js_arg(value: str | None) -> str:
+    """Encode a string for a quoted inline handler without breaking the page."""
+    return _esc(json.dumps(value or ""), quote=True)
+
+
 @router.get("", response_class=HTMLResponse)
 async def servers_list(request: Request, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Server).order_by(Server.name))
@@ -21,10 +31,12 @@ async def servers_list(request: Request, db: AsyncSession = Depends(get_db)):
 
     html = BASE_TEMPLATE_START
     html += """
-<div class="card">
-<div class="card-head"><h2>Servers</h2>
-<a href="/servers/add" class="btn btn-accent btn-sm">Add Server</a>
+<div class="page-intro">
+<div><div class="eyebrow">Infrastructure</div><h1>Servers</h1><p>Manage access, connectivity, and the instances running on each host.</p></div>
+<div class="page-actions"><a href="/servers/add" class="btn btn-accent">Add server</a></div>
 </div>
+<div class="card">
+<div class="card-head"><div><h2>Registered servers</h2><div class="card-subtitle">Credentials are encrypted at rest</div></div></div>
 """
     if not servers:
         html += '<div class="empty-state">No servers registered yet.</div>'
@@ -35,11 +47,11 @@ async def servers_list(request: Request, db: AsyncSession = Depends(get_db)):
             last_seen = srv.last_seen_at.strftime("%Y-%m-%d %H:%M:%S") if srv.last_seen_at else "never"
             ssh_info = f"{srv.ssh_user}@{srv.ssh_host}:{srv.ssh_port}" if srv.ssh_host else "\u2014"
             html += f"""<tr>
-<td style="font-weight:600">{srv.name}</td>
-<td class="mono" style="color:var(--text-secondary)">{srv.base_url}</td>
-<td class="mono" style="color:var(--text-secondary)">{ssh_info}</td>
+<td style="font-weight:600"><a href="/servers/{srv.id}">{_esc(srv.name)}</a></td>
+<td class="mono">{_esc(srv.base_url)}</td>
+<td class="mono">{_esc(ssh_info)}</td>
 <td style="font-weight:600">{inst_count}</td>
-<td style="font-size:12px;color:var(--text-muted)">{last_seen}</td>
+<td style="font-size:12px;color:var(--text-muted)">{_esc(last_seen)}</td>
 <td><div style="display:flex;gap:6px">
 <a href="/servers/{srv.id}" class="btn btn-sm btn-ghost">View</a>
 <a href="/servers/{srv.id}/edit" class="btn btn-sm btn-ghost">Edit</a>
@@ -144,16 +156,16 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
     html += f"""
 <div class="card">
 <div class="card-head">
-<h2><a href="/">Fleet</a> / {server.name}</h2>
+<h2><a href="/">Fleet</a> / {_esc(server.name)}</h2>
 <div style="display:flex;gap:8px">
 <a href="/servers/{server.id}/edit" class="btn btn-sm btn-ghost">Edit</a>
 <button class="btn btn-sm btn-ghost" onclick="location.reload()">Refresh</button>
 </div>
 </div>
 <div class="server-meta">
-<div class="server-meta-item"><span class="server-meta-label">URL</span><span class="server-meta-value">{server.base_url}</span></div>
-<div class="server-meta-item"><span class="server-meta-label">Admin</span><span>{server.admin_username}</span></div>
-<div class="server-meta-item"><span class="server-meta-label">SSH</span><span>{ssh_info}</span></div>
+<div class="server-meta-item"><span class="server-meta-label">URL</span><span class="server-meta-value">{_esc(server.base_url)}</span></div>
+<div class="server-meta-item"><span class="server-meta-label">Admin</span><span>{_esc(server.admin_username)}</span></div>
+<div class="server-meta-item"><span class="server-meta-label">SSH</span><span>{_esc(ssh_info)}</span></div>
 <div class="server-meta-item"><span class="server-meta-label">Instances</span><span style="font-weight:600">{len(instances)}</span></div>
 <div class="server-meta-item"><span class="server-meta-label">Last poll</span><span class="mono">{server.last_seen_at.strftime('%Y-%m-%d %H:%M:%S') if server.last_seen_at else 'never'}</span></div>
 </div>
@@ -184,28 +196,28 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
             if st == "active":
                 status_badge = '<span class="badge badge-healthy">active</span>'
             elif st in ("inactive", "failed"):
-                status_badge = '<span class="badge badge-critical">' + st + '</span>'
+                status_badge = '<span class="badge badge-critical">' + _esc(st) + '</span>'
             else:
-                status_badge = '<span class="badge badge-unknown">' + st + '</span>'
+                status_badge = '<span class="badge badge-unknown">' + _esc(st) + '</span>'
 
             em = "\u2014"
             poll_time = inst.last_polled_at.strftime("%H:%M:%S") if inst.last_polled_at else "never"
 
             html += f"""<tr>
-<td style="font-weight:600">{inst.instance_name}</td>
-<td class="mono" style="font-size:12px;color:var(--text-secondary)">{inst.domain or em}</td>
-<td style="color:var(--text-secondary)">{inst.broker or em}</td>
+<td style="font-weight:600">{_esc(inst.instance_name)}</td>
+<td class="mono">{_esc(inst.domain or em)}</td>
+<td style="color:var(--text-secondary)">{_esc(inst.broker or em)}</td>
 <td>{status_badge}</td>
 <td>{health_badge}</td>
-<td style="color:var(--text-secondary)">{inst.env_version or em}</td>
-<td style="font-size:12px;color:var(--text-muted)">{poll_time}</td>
+<td style="color:var(--text-secondary)">{_esc(inst.env_version or em)}</td>
+<td style="font-size:12px;color:var(--text-muted)">{_esc(poll_time)}</td>
 <td><div style="display:flex;gap:4px;flex-wrap:wrap">
-<button class="btn btn-sm" onclick="actionRestart('{inst.instance_name}')">Restart</button>
-<button class="btn btn-sm btn-warning" onclick="actionStop('{inst.instance_name}')">Stop</button>
-<button class="btn btn-sm btn-success" onclick="actionStart('{inst.instance_name}')">Start</button>
-<button class="btn btn-sm btn-ghost" onclick="viewLogs('{inst.instance_name}')">Logs</button>
-<button class="btn btn-sm btn-ghost" onclick="actionHealthCheck('{inst.instance_name}')">Health</button>
-<button class="btn btn-sm" onclick="actionUpdate('{inst.instance_name}')">Update</button>
+<button class="btn btn-sm" onclick="actionRestart({_js_arg(inst.instance_name)})">Restart</button>
+<button class="btn btn-sm btn-warning" onclick="actionStop({_js_arg(inst.instance_name)})">Stop</button>
+<button class="btn btn-sm btn-success" onclick="actionStart({_js_arg(inst.instance_name)})">Start</button>
+<button class="btn btn-sm btn-ghost" onclick="viewLogs({_js_arg(inst.instance_name)})">Logs</button>
+<button class="btn btn-sm btn-ghost" onclick="actionHealthCheck({_js_arg(inst.instance_name)})">Health</button>
+<button class="btn btn-sm" onclick="actionUpdate({_js_arg(inst.instance_name)})">Update</button>
 </div></td>
 </tr>"""
         html += '</tbody></table></div></div>'
@@ -374,30 +386,30 @@ async def edit_server_form(request: Request, server_id: int, db: AsyncSession = 
     html = BASE_TEMPLATE_START
     html += f"""
 <div class="card">
-<div class="card-head"><h2>Edit Server: {server.name}</h2></div>
+<div class="card-head"><h2>Edit Server: {_esc(server.name)}</h2></div>
 <div style="padding:20px">
 <form method="POST" action="/servers/{server.id}/edit">
 <label class="reset-field-label">Name</label>
-<input class="reset-input" type="text" name="name" value="{server.name or ''}" required>
+<input class="reset-input" type="text" name="name" value="{_esc(server.name)}" required>
 <label class="reset-field-label">Admin API URL</label>
-<input class="reset-input" type="text" name="base_url" value="{server.base_url or ''}" required>
+<input class="reset-input" type="text" name="base_url" value="{_esc(server.base_url)}" required>
 <label class="reset-field-label">Admin Username</label>
-<input class="reset-input" type="text" name="admin_username" value="{server.admin_username or ''}" required>
+<input class="reset-input" type="text" name="admin_username" value="{_esc(server.admin_username)}" required>
 <label class="reset-field-label">Admin Password <span style="color:var(--text-muted)">(leave blank to keep current)</span></label>
 <input class="reset-input" type="password" name="admin_password" placeholder="Leave blank to keep current">
 <hr style="border-color:var(--border);margin:16px 0">
 <label class="reset-field-label">SSH Host</label>
-<input class="reset-input" type="text" name="ssh_host" value="{server.ssh_host or ''}">
+<input class="reset-input" type="text" name="ssh_host" value="{_esc(server.ssh_host)}">
 <label class="reset-field-label">SSH Port</label>
 <input class="reset-input" type="number" name="ssh_port" value="{server.ssh_port}">
 <label class="reset-field-label">SSH User</label>
-<input class="reset-input" type="text" name="ssh_user" value="{server.ssh_user or ''}">
+<input class="reset-input" type="text" name="ssh_user" value="{_esc(server.ssh_user)}">
 <label class="reset-field-label">SSH Private Key <span style="color:var(--text-muted)">(leave blank to keep current)</span></label>
 <textarea name="ssh_key" placeholder="Leave blank to keep current" class="mono" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:12px;min-height:60px;resize:vertical"></textarea>
 <label class="reset-field-label">SSH Host Key <span style="color:var(--text-muted)">(leave blank to keep current)</span></label>
 <textarea name="ssh_host_key" placeholder="Leave blank to keep current" class="mono" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:12px;min-height:60px;resize:vertical"></textarea>
 <label class="reset-field-label">Notes</label>
-<textarea name="notes" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:13px;font-family:inherit;min-height:60px;resize:vertical">{server.notes or ''}</textarea>
+<textarea name="notes" class="reset-input">{_esc(server.notes)}</textarea>
 <div style="display:flex;gap:10px;justify-content:flex-end">
 <a href="/servers/{server.id}" class="btn">Cancel</a>
 <button type="submit" class="btn btn-accent">Save Changes</button>

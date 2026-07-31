@@ -209,9 +209,12 @@ else{errEl.style.display='block';errEl.textContent=d.error||d.detail||'Failed';}
 
 @router.post("/api/change-password")
 async def change_password(request: Request, db: AsyncSession = Depends(get_db)):
-    import json as _json
-    body = await request.body()
-    data = _json.loads(body)
+    try:
+        data = await request.json()
+    except ValueError:
+        return {"error": "Invalid JSON request"}
+    if not isinstance(data, dict):
+        return {"error": "Invalid request body"}
     new_password = data.get("new_password", "")
 
     if not new_password or len(new_password) < 8:
