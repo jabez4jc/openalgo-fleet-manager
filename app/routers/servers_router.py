@@ -205,6 +205,8 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
             st = inst.status or "unknown"
             if st == "active":
                 status_badge = '<span class="badge badge-healthy">active</span>'
+            elif st == "wedged":
+                status_badge = '<span class="badge badge-critical" title="systemd says active but the instance answers nothing">wedged</span>'
             elif st in ("inactive", "failed"):
                 status_badge = '<span class="badge badge-critical">' + _esc(st) + '</span>'
             else:
@@ -279,6 +281,10 @@ logEl.textContent='Job started: '+result.job_id+'\\nPolling...';
 pollJob(result.job_id,title,logEl);
 }}else{{
 logEl.textContent=JSON.stringify(result,null,2);
+// stop/start are synchronous and report real systemctl failures - a 200 in the
+// browser is not the same thing as the action having worked.
+if(result.status&&result.status!=='queued')showToast(title+' - '+result.status,result.status==='success'?'success':'error');
+else if(result.error)showToast(title+' - '+result.error,'error');
 }}
 }}
 async function pollJob(jobId,title,logEl){{
@@ -302,7 +308,7 @@ const d=await apiCall('/restart-instance',{{instance:inst}});
 showActionPanel('Restart '+inst,d);
 }}
 async function actionStop(inst){{
-if(!confirm('STOP instance '+inst+'? This will bring the trading bot down.'))return;
+if(!confirm('STOP instance '+inst+'? This disables it too, so it stays down across reboots and Restart All until you press Start.'))return;
 const d=await apiCall('/stop-instance',{{instance:inst}});
 showActionPanel('Stop '+inst,d);
 }}

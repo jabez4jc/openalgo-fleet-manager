@@ -39,7 +39,7 @@ class AdminAPISession:
             return True
         return await self._login()
 
-    async def _request(self, method: str, path: str, json_data: dict | None = None, params: dict | None = None) -> dict:
+    async def _request(self, method: str, path: str, json_data: dict | None = None, params: dict | None = None, timeout: int = 30) -> dict:
         ok = await self._ensure_session()
         if not ok:
             return {"error": "admin_api_login_failed", "detail": "Could not authenticate to server admin API"}
@@ -49,7 +49,7 @@ class AdminAPISession:
             headers["Cookie"] = f"oa_session={self.cookie}"
 
         try:
-            async with httpx.AsyncClient(timeout=30, verify=SSL_VERIFY) as client:
+            async with httpx.AsyncClient(timeout=timeout, verify=SSL_VERIFY) as client:
                 if method == "GET":
                     resp = await client.get(urljoin(self.base_url, path), headers=headers, params=params)
                 elif method == "POST":
@@ -79,7 +79,9 @@ class AdminAPISession:
         return await self._request("GET", "/api/instances")
 
     async def get_health(self) -> dict:
-        return await self._request("GET", "/api/health")
+        # The socket probe behind serving/wedged costs up to 5s per unresponsive
+        # instance, so this one needs far more headroom than the default.
+        return await self._request("GET", "/api/health", timeout=120)
 
     async def get_status(self) -> dict:
         return await self._request("GET", "/api/status")

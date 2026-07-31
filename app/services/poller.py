@@ -17,6 +17,11 @@ logger = logging.getLogger("fleetmgr.poller")
 def _health_status_from_health(health_data: dict) -> str:
     if health_data.get("error"):
         return "unreachable"
+    # systemd is-active says "active" for a wedged worker that answers nothing.
+    # /api/health's socket probe is the only thing that sees it - and it is the
+    # state that produces the user-visible 5xx, so it is critical, not healthy.
+    if health_data.get("wedged"):
+        return "critical"
     status = health_data.get("status", "unknown")
     if status == "active":
         return "healthy"
@@ -54,7 +59,7 @@ async def poll_server(server: Server, db: AsyncSession):
 
     for inst_name, inst_data in instances_health.items():
         seen_names.add(inst_name)
-        inst_status = inst_data.get("status", "unknown")
+        inst_status = "wedged" if inst_data.get("wedged") else inst_data.get("status", "unknown")
         health_status = _health_status_from_health(inst_data)
 
         existing = None

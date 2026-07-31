@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.database import get_db
-from app.models import Server, Instance, ProvisioningJob
+from app.models import Server, ProvisioningJob
 from app.encryption import decrypt_value, encrypt_value
 from app.config import SCRIPTS_REPO_PATH, SCRIPTS_REPO_URL, SCRIPTS_REF
 from app.services.ssh_client import SSHClient
@@ -240,13 +240,11 @@ async def submit_provision(request: Request, db: AsyncSession = Depends(get_db))
         await db.commit()
         await db.refresh(job)
 
-        instance_name = domain.split(".")[0] if "." in domain else domain
-
         await write_audit_log(db, actor=username, action="provision_new_server", server_id=server.id, instance_name=domain,
                               detail={"server_name": server_name, "broker": broker})
         await db.commit()
 
-        _run_new_server(server, job.id, admin_pw, domain, broker, api_key, api_secret, market_key, market_secret, instance_name)
+        _run_new_server(server, job.id, admin_pw, domain, broker, api_key, api_secret, market_key, market_secret)
         return JSONResponse({"job_id": str(job.id), "status": "queued", "server_id": server.id})
 
     try:
@@ -299,7 +297,6 @@ def _run_new_instance(server: Server, job_id: int, admin_pw: str, domain: str, b
                       api_key: str, api_secret: str, market_key: str, market_secret: str):
     from app.config import DATABASE_URL
 
-    instance_name = domain.split(".")[0] if "." in domain else domain
     config_content = _make_config_content(domain, broker, api_key, api_secret, market_key, market_secret)
     remote_config_path = f"/tmp/instance-{job_id}.env"
     multi_install_cmd = f"sudo bash {SCRIPTS_REPO_PATH}/multi-install.sh --config {remote_config_path}"
@@ -337,9 +334,6 @@ def _run_new_instance(server: Server, job_id: int, admin_pw: str, domain: str, b
                     if j:
                         if exit_code == 0:
                             j.status = "success"; j.log_text = output; j.finished_at = datetime.now(timezone.utc)
-                            inst = Instance(server_id=server.id, instance_name=instance_name, domain=domain,
-                                           broker=broker, status="provisioned", health_status="pending")
-                            db.add(inst)
                         else:
                             j.status = "failed"; j.log_text = output; j.finished_at = datetime.now(timezone.utc)
                         await db.commit()
@@ -363,7 +357,7 @@ def _run_new_instance(server: Server, job_id: int, admin_pw: str, domain: str, b
 
 
 def _run_new_server(server: Server, job_id: int, admin_pw: str, domain: str, broker: str,
-                    api_key: str, api_secret: str, market_key: str, market_secret: str, instance_name: str):
+                    api_key: str, api_secret: str, market_key: str, market_secret: str):
     from app.config import DATABASE_URL
 
     config_content = _make_config_content(domain, broker, api_key, api_secret, market_key, market_secret)
@@ -427,9 +421,6 @@ def _run_new_server(server: Server, job_id: int, admin_pw: str, domain: str, bro
                         srv.admin_password_encrypted = encrypt_value(admin_pw)
                     if j:
                         j.status = "success"; j.log_text = output + "\n\n" + pw_output; j.finished_at = datetime.now(timezone.utc)
-                    inst = Instance(server_id=server.id, instance_name=instance_name, domain=domain,
-                                   broker=broker, status="provisioned", health_status="pending")
-                    db.add(inst)
                     await db.commit()
 
             except Exception as e:
