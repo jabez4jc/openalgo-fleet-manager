@@ -8,6 +8,7 @@ from app.models import FleetUser
 from app.encryption import verify_password, hash_password, create_session, validate_session, destroy_session
 from app.auth import SESSION_COOKIE, check_bootstrap, bootstrap_admin, check_rate_limit, record_failed_attempt, clear_rate_limit
 from app.services.audit import write_audit_log
+from app.routers.dashboard_router import PWA_HEAD
 
 router = APIRouter(tags=["auth"])
 
@@ -17,6 +18,7 @@ LOGIN_TEMPLATE = """<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OpenAlgo Fleet Manager - Login</title>
+""" + PWA_HEAD + """
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -166,6 +168,7 @@ async def force_change_password_page(request: Request):
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Change Password - Fleet Manager</title>
+""" + PWA_HEAD + """
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">

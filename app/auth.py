@@ -13,7 +13,10 @@ from app.encryption import validate_session
 from app.config import FLEET_ADMIN_BOOTSTRAP_PASSWORD
 
 SESSION_COOKIE = "fm_session"
-EXEMPT_PATHS = {"/login", "/login-submit", "/health"}
+# /sw.js must be reachable logged-out: the browser fetches it before there is a
+# session, and a redirect to /login there kills the install prompt. It serves a
+# static file and exposes nothing.
+EXEMPT_PATHS = {"/login", "/login-submit", "/health", "/sw.js"}
 
 MAX_LOGIN_ATTEMPTS = 5
 LOGIN_LOCKOUT_SECONDS = 900

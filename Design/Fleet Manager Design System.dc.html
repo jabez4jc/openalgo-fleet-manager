@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #070b14; color: #e2e8f0; font-family: Inter, Helvetica, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: #3b82f6; text-decoration: none; }
+  a:hover { color: #60a5fa; }
+  * { box-sizing: border-box; }
+  @keyframes fmPulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.85); } }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #1e2742; border-radius: 6px; }
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #070b14; padding: 0 0 96px;">
+
+  <div style="position: sticky; top: 0; z-index: 40; display: flex; align-items: center; gap: 20px; padding: 0 28px; height: 56px; background: rgba(12,17,35,.82); backdrop-filter: blur(12px); border-bottom: 1px solid #1e2742;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 22px; height: 22px; border-radius: 6px; background: linear-gradient(140deg, #3b82f6, #1d4ed8); box-shadow: 0 0 20px rgba(59,130,246,.25);"></div>
+      <span style="font-size: 13.5px; font-weight: 650; letter-spacing: -.01em;">Fleet Manager</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483; padding: 2px 6px; border: 1px solid #1e2742; border-radius: 6px;">DS v1.0</span>
+    </div>
+    <div style="display: flex; gap: 2px; margin-left: 8px;">
+      <a href="#tokens" style="font-size: 13px; color: #8892b0; padding: 6px 10px; border-radius: 6px;">Tokens</a>
+      <a href="#components" style="font-size: 13px; color: #8892b0; padding: 6px 10px; border-radius: 6px;">Components</a>
+      <a href="#patterns" style="font-size: 13px; color: #8892b0; padding: 6px 10px; border-radius: 6px;">Patterns</a>
+    </div>
+    <div style="flex: 1;"></div>
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: #8892b0;">
+      <span style="width: 7px; height: 7px; border-radius: 50%; background: #22c55e; animation: fmPulse 2s infinite;"></span>
+      <span>poller live · 60s</span>
+    </div>
+    <div style="width: 26px; height: 26px; border-radius: 50%; background: #161e33; border: 1px solid #1e2742; display: grid; place-items: center; font-size: 11px; color: #8892b0;">JC</div>
+  </div>
+
+  <div style="max-width: 1180px; margin: 0 auto; padding: 40px 28px 0; display: flex; flex-direction: column; gap: 56px;">
+
+    <header style="display: flex; flex-direction: column; gap: 14px; padding-top: 8px;">
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #5a6483; letter-spacing: .06em; text-transform: uppercase;">openalgo-fleet-manager / design system</div>
+      <h1 style="margin: 0; font-size: 40px; font-weight: 650; letter-spacing: -.025em; line-height: 1.05; max-width: 18ch;">Serious tooling for serious money.</h1>
+      <p style="margin: 0; max-width: 62ch; font-size: 14px; line-height: 1.6; color: #8892b0; text-wrap: pretty;">Dark-first, high-density interface kit for multi-server orchestration: fleet health, instance actions, SSH provisioning, and audit trails. Every token and component below maps to a class in <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e2e8f0;">static/style.css</span>.</p>
+    </header>
+
+    <section id="tokens" style="display: flex; flex-direction: column; gap: 24px;">
+      <div style="display: flex; align-items: baseline; gap: 12px; border-bottom: 1px solid #1e2742; padding-bottom: 12px;">
+        <h2 style="margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -.01em;">Foundations</h2>
+        <span style="font-size: 12px; color: #5a6483;">surfaces · status · type · spacing · elevation</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px;">
+        <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; overflow: hidden;">
+          <div style="height: 60px; background: #070b14;"></div>
+          <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 3px;"><span style="font-size: 12.5px; font-weight: 500;">bg-deep</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #5a6483;">#070b14</span></div>
+        </div>
+        <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; overflow: hidden;">
+          <div style="height: 60px; background: #0c1123;"></div>
+          <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 3px;"><span style="font-size: 12.5px; font-weight: 500;">bg</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #5a6483;">#0c1123</span></div>
+        </div>
+        <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; overflow: hidden;">
+          <div style="height: 60px; background: #111728;"></div>
+          <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 3px;"><span style="font-size: 12.5px; font-weight: 500;">bg-elevated</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #5a6483;">#111728</span></div>
+        </div>
+        <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; overflow: hidden;">
+          <div style="height: 60px; background: #161e33;"></div>
+          <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 3px;"><span style="font-size: 12.5px; font-weight: 500;">bg-inset</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #5a6483;">#161e33</span></div>
+        </div>
+        <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; overflow: hidden;">
+          <div style="height: 60px; background: #1e2742;"></div>
+          <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 3px;"><span style="font-size: 12.5px; font-weight: 500;">border</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #5a6483;">#1e2742</span></div>
+        </div>
+        <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; overflow: hidden;">
+          <div style="height: 60px; background: #2a3454;"></div>
+          <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 3px;"><span style="font-size: 12.5px; font-weight: 500;">border-hover</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #5a6483;">#2a3454</span></div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px;">
+        <sc-for list="{{ statusTokens }}" as="tok" hint-placeholder-count="5">
+          <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: {{ tok.hex }};"></span>
+              <span style="font-size: 13px; font-weight: 600;">{{ tok.name }}</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483; margin-left: auto;">{{ tok.hex }}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: {{ tok.soft }}; color: {{ tok.hex }};">{{ tok.label }}</span>
+              <span style="font-size: 11.5px; color: #8892b0;">{{ tok.use }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px;">
+        <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 16px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483; text-transform: uppercase; letter-spacing: .06em;">Type scale</span>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; align-items: baseline; gap: 14px;"><span style="font-size: 28px; font-weight: 650; letter-spacing: -.02em;">Fleet overview</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483;">28/650</span></div>
+            <div style="display: flex; align-items: baseline; gap: 14px;"><span style="font-size: 18px; font-weight: 600;">Section heading</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483;">18/600</span></div>
+            <div style="display: flex; align-items: baseline; gap: 14px;"><span style="font-size: 14px;">Card &amp; form body copy</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483;">14/400</span></div>
+            <div style="display: flex; align-items: baseline; gap: 14px;"><span style="font-size: 13px; color: #e2e8f0;">Table row text</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483;">13/400</span></div>
+            <div style="display: flex; align-items: baseline; gap: 14px;"><span style="font-size: 11.5px; color: #8892b0;">Metadata and labels</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483;">11.5/400</span></div>
+            <div style="display: flex; align-items: baseline; gap: 14px;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">GET /api/health → 200</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483;">mono 12</span></div>
+          </div>
+        </div>
+
+        <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 18px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483; text-transform: uppercase; letter-spacing: .06em;">Spacing · radius · elevation</span>
+          <div style="display: flex; align-items: flex-end; gap: 10px;">
+            <sc-for list="{{ spacing }}" as="s" hint-placeholder-count="8">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                <div style="width: 14px; background: #3b82f6; opacity: .8; border-radius: 2px; height: {{ s.px }};"></div>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #5a6483;">{{ s.n }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display: flex; gap: 14px;">
+            <div style="flex: 1; height: 52px; background: #161e33; border: 1px solid #1e2742; border-radius: 6px; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8892b0;">6px</div>
+            <div style="flex: 1; height: 52px; background: #161e33; border: 1px solid #1e2742; border-radius: 10px; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8892b0;">10px</div>
+            <div style="flex: 1; height: 52px; background: #161e33; border: 1px solid #1e2742; border-radius: 14px; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8892b0;">14px</div>
+          </div>
+          <div style="display: flex; gap: 14px;">
+            <div style="flex: 1; height: 52px; background: #111728; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.3); display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8892b0;">sm</div>
+            <div style="flex: 1; height: 52px; background: #111728; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.35), 0 8px 24px -12px rgba(0,0,0,.5); display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8892b0;">md</div>
+            <div style="flex: 1; height: 52px; background: #111728; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 16px 48px -16px rgba(0,0,0,.6); display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8892b0;">lg</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="components" style="display: flex; flex-direction: column; gap: 24px;">
+      <div style="display: flex; align-items: baseline; gap: 12px; border-bottom: 1px solid #1e2742; padding-bottom: 12px;">
+        <h2 style="margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -.01em;">Components</h2>
+        <span style="font-size: 12px; color: #5a6483;">buttons · badges · inputs · KPIs · tables · toasts · dialogs · logs</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px;">
+        <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.35), 0 8px 24px -12px rgba(0,0,0,.5);">
+          <div style="padding: 14px 20px; border-bottom: 1px solid #1e2742; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 13px; font-weight: 600;">Buttons</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483;">.btn</span>
+          </div>
+          <div style="padding: 18px 20px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <button style="{{ btnAccent }}">Restart instance</button>
+              <button style="font: 500 13px Inter, sans-serif; padding: 8px 14px; border-radius: 6px; border: 1px solid #1e2742; background: #161e33; color: #e2e8f0; cursor: pointer;" style-hover="border-color: #2a3454; background: #1b2440;">Health check</button>
+              <button style="font: 500 13px Inter, sans-serif; padding: 8px 14px; border-radius: 6px; border: 1px solid rgba(34,197,94,.3); background: rgba(34,197,94,.12); color: #22c55e; cursor: pointer;" style-hover="background: rgba(34,197,94,.2);">Start</button>
+              <button style="font: 500 13px Inter, sans-serif; padding: 8px 14px; border-radius: 6px; border: 1px solid rgba(234,179,8,.3); background: rgba(234,179,8,.12); color: #eab308; cursor: pointer;" style-hover="background: rgba(234,179,8,.2);">Stop</button>
+              <button style="font: 500 13px Inter, sans-serif; padding: 8px 14px; border-radius: 6px; border: 1px solid rgba(239,68,68,.3); background: rgba(239,68,68,.12); color: #ef4444; cursor: pointer;" style-hover="background: rgba(239,68,68,.2);">Reboot server</button>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <button style="font: 500 12px Inter, sans-serif; padding: 6px 10px; border-radius: 6px; border: 1px solid #1e2742; background: #161e33; color: #e2e8f0; cursor: pointer;">Small</button>
+              <button style="font: 500 12px Inter, sans-serif; padding: 6px 10px; border-radius: 6px; border: 1px solid transparent; background: transparent; color: #8892b0; cursor: pointer;" style-hover="background: #111728; color: #e2e8f0;">Ghost</button>
+              <button style="font: 500 13px Inter, sans-serif; padding: 8px 14px; border-radius: 6px; border: 1px solid #1e2742; background: #0f1526; color: #5a6483; cursor: not-allowed;">Disabled</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.35), 0 8px 24px -12px rgba(0,0,0,.5);">
+          <div style="padding: 14px 20px; border-bottom: 1px solid #1e2742; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 13px; font-weight: 600;">Badges &amp; indicators</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483;">.badge</span>
+          </div>
+          <div style="padding: 18px 20px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <sc-for list="{{ badges }}" as="b" hint-placeholder-count="6">
+                <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: {{ b.soft }}; color: {{ b.color }};">
+                  <span style="width: 6px; height: 6px; border-radius: 50%; background: {{ b.color }};"></span>{{ b.text }}
+                </span>
+              </sc-for>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8892b0; padding: 4px 8px; border: 1px solid #1e2742; border-radius: 6px;">v1.4.2</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8892b0; padding: 4px 8px; border: 1px solid #1e2742; border-radius: 6px;">:8001</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8892b0; padding: 4px 8px; border: 1px solid #1e2742; border-radius: 6px;">uptime 14d 06h</span>
+              <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: #8892b0;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #22c55e; animation: fmPulse 2s infinite;"></span>polling</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.35), 0 8px 24px -12px rgba(0,0,0,.5);">
+          <div style="padding: 14px 20px; border-bottom: 1px solid #1e2742; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 13px; font-weight: 600;">Form controls</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483;">.field</span>
+          </div>
+          <div style="padding: 18px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div style="display: flex; flex-direction: column; gap: 6px; grid-column: span 2;">
+              <label style="font-size: 11.5px; font-weight: 500; color: #8892b0;">Server base URL</label>
+              <input value="https://trade1.example.com" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e2e8f0; background: #111728; border: 1px solid #1e2742; border-radius: 6px; padding: 9px 12px; width: 100%;" style-focus="border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,.12);" />
+              <span style="font-size: 11px; color: #5a6483;">Must expose <span style="font-family: 'JetBrains Mono', monospace;">openalgo-restart-api</span> over HTTPS.</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label style="font-size: 11.5px; font-weight: 500; color: #8892b0;">SSH user</label>
+              <input value="deploy" style="font-size: 13px; color: #e2e8f0; background: #111728; border: 1px solid #1e2742; border-radius: 6px; padding: 9px 12px; width: 100%;" style-focus="border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,.12);" />
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label style="font-size: 11.5px; font-weight: 500; color: #8892b0;">Port</label>
+              <input value="22" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e2e8f0; background: #111728; border: 1px solid #1e2742; border-radius: 6px; padding: 9px 12px; width: 100%;" style-focus="border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,.12);" />
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px; grid-column: span 2;">
+              <label style="font-size: 11.5px; font-weight: 500; color: #ef4444;">Admin API password</label>
+              <input value="wrong-secret" style="font-size: 13px; color: #e2e8f0; background: #111728; border: 1px solid rgba(239,68,68,.5); border-radius: 6px; padding: 9px 12px; width: 100%;" />
+              <span style="font-size: 11px; color: #ef4444;">401 from /api/health — credentials rejected.</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.35), 0 8px 24px -12px rgba(0,0,0,.5);">
+          <div style="padding: 14px 20px; border-bottom: 1px solid #1e2742; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 13px; font-weight: 600;">Toasts &amp; dialog</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483;">.toast / .dialog</span>
+          </div>
+          <div style="padding: 18px 20px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px; background: #111728; border: 1px solid #1e2742; border-left: 2px solid #22c55e; border-radius: 8px; padding: 11px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 16px 48px -16px rgba(0,0,0,.6);">
+              <span style="font-size: 13px; flex: 1;">Instance <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">trade1:8001</span> restarted</span>
+              <span style="font-size: 11px; color: #5a6483;">4s</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; background: #111728; border: 1px solid #1e2742; border-left: 2px solid #ef4444; border-radius: 8px; padding: 11px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 16px 48px -16px rgba(0,0,0,.6);">
+              <span style="font-size: 13px; flex: 1;">SSH provisioning failed — exit 255</span>
+              <span style="font-size: 11px; color: #8892b0; cursor: pointer;">View log</span>
+            </div>
+            <div style="margin-top: 4px; background: #0c1123; border: 1px solid #2a3454; border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 16px 48px -16px rgba(0,0,0,.6); display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-size: 15px; font-weight: 600;">Reboot trade2.example.com?</span>
+              <span style="font-size: 13px; line-height: 1.55; color: #8892b0;">3 running instances will be interrupted for roughly 40 seconds. Open positions are unaffected.</span>
+              <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px;">
+                <button style="font: 500 13px Inter, sans-serif; padding: 8px 14px; border-radius: 6px; border: 1px solid #1e2742; background: #161e33; color: #e2e8f0; cursor: pointer;">Cancel</button>
+                <button style="font: 500 13px Inter, sans-serif; padding: 8px 14px; border-radius: 6px; border: 1px solid rgba(239,68,68,.3); background: rgba(239,68,68,.12); color: #ef4444; cursor: pointer;">Reboot</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px;">
+        <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="5">
+          <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-size: 11px; font-weight: 500; letter-spacing: .05em; text-transform: uppercase; color: #5a6483;">{{ k.label }}</span>
+            <span style="font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.02em; color: {{ k.color }};">{{ k.value }}</span>
+            <span style="font-size: 11.5px; color: #8892b0;">{{ k.sub }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.35), 0 8px 24px -12px rgba(0,0,0,.5);">
+        <div style="padding: 14px 20px; border-bottom: 1px solid #1e2742; display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 13px; font-weight: 600;">Instances</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483;">6 of 6</span>
+          <div style="flex: 1;"></div>
+          <button style="font: 500 12px Inter, sans-serif; padding: 6px 10px; border-radius: 6px; border: 1px solid #1e2742; background: #161e33; color: #e2e8f0; cursor: pointer;">Refresh</button>
+          <button style="{{ btnAccentSm }}">Provision</button>
+        </div>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; min-width: 820px;">
+            <thead>
+              <tr style="background: #0a0f1e;">
+                <th style="text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: #5a6483; padding: 10px 14px; border-bottom: 1px solid #1e2742;">Server</th>
+                <th style="text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: #5a6483; padding: 10px 14px; border-bottom: 1px solid #1e2742;">Instance</th>
+                <th style="text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: #5a6483; padding: 10px 14px; border-bottom: 1px solid #1e2742;">Status</th>
+                <th style="text-align: right; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: #5a6483; padding: 10px 14px; border-bottom: 1px solid #1e2742;">CPU</th>
+                <th style="text-align: right; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: #5a6483; padding: 10px 14px; border-bottom: 1px solid #1e2742;">Mem</th>
+                <th style="text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: #5a6483; padding: 10px 14px; border-bottom: 1px solid #1e2742;">Last poll</th>
+                <th style="text-align: right; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: #5a6483; padding: 10px 14px; border-bottom: 1px solid #1e2742;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+                <tr style="border-bottom: 1px solid #141c31;" style-hover="background: #111728;">
+                  <td style="padding: 10px 14px; font-size: 13px; font-weight: 500;">{{ r.server }}</td>
+                  <td style="padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #8892b0;">{{ r.instance }}</td>
+                  <td style="padding: 10px 14px;">
+                    <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: {{ r.soft }}; color: {{ r.color }};"><span style="width: 6px; height: 6px; border-radius: 50%; background: {{ r.color }};"></span>{{ r.status }}</span>
+                  </td>
+                  <td style="padding: 10px 14px; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-variant-numeric: tabular-nums; color: #e2e8f0;">{{ r.cpu }}</td>
+                  <td style="padding: 10px 14px; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-variant-numeric: tabular-nums; color: #e2e8f0;">{{ r.mem }}</td>
+                  <td style="padding: 10px 14px; font-size: 11.5px; color: #5a6483;">{{ r.poll }}</td>
+                  <td style="padding: 10px 14px; text-align: right;">
+                    <div style="display: inline-flex; gap: 6px;">
+                      <button style="font: 500 11.5px Inter, sans-serif; padding: 5px 9px; border-radius: 6px; border: 1px solid #1e2742; background: #161e33; color: #e2e8f0; cursor: pointer;" style-hover="border-color: #2a3454;">Restart</button>
+                      <button style="font: 500 11.5px Inter, sans-serif; padding: 5px 9px; border-radius: 6px; border: 1px solid transparent; background: transparent; color: #8892b0; cursor: pointer;" style-hover="background: #161e33; color: #e2e8f0;">Logs</button>
+                    </div>
+                  </td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; align-items: start;">
+        <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; overflow: hidden;">
+          <div style="padding: 14px 20px; border-bottom: 1px solid #1e2742; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 13px; font-weight: 600;">Provisioning log</span>
+            <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: rgba(56,189,248,.12); color: #38bdf8;">running</span>
+            <div style="flex: 1;"></div>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483;">multi-install.sh</span>
+          </div>
+          <div style="margin: 16px 20px 20px; background: #070b14; border: 1px solid #1e2742; border-radius: 8px; padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 1.75; max-height: 210px; overflow: auto;">
+            <sc-for list="{{ logLines }}" as="l" hint-placeholder-count="8">
+              <div style="display: flex; gap: 12px;">
+                <span style="color: #5a6483; flex: none;">{{ l.t }}</span>
+                <span style="color: {{ l.color }};">{{ l.text }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; padding: 32px 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; flex: 1; justify-content: center;">
+            <span style="font-size: 13.5px; font-weight: 600;">No servers registered</span>
+            <span style="font-size: 12.5px; color: #8892b0; max-width: 30ch; line-height: 1.55;">Add a server with its admin API credentials and the poller will discover instances within 60 seconds.</span>
+            <a href="#components" style="font-size: 12.5px; font-weight: 500; margin-top: 4px;">Add server →</a>
+          </div>
+          <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483; text-transform: uppercase; letter-spacing: .06em;">Audit trail</span>
+            <sc-for list="{{ audit }}" as="a" hint-placeholder-count="4">
+              <div style="display: flex; gap: 10px; align-items: baseline;">
+                <span style="width: 5px; height: 5px; border-radius: 50%; background: {{ a.color }}; flex: none; transform: translateY(-2px);"></span>
+                <span style="font-size: 12.5px; flex: 1; line-height: 1.5;">{{ a.text }}</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #5a6483; flex: none;">{{ a.time }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="patterns" style="display: flex; flex-direction: column; gap: 24px;">
+      <div style="display: flex; align-items: baseline; gap: 12px; border-bottom: 1px solid #1e2742; padding-bottom: 12px;">
+        <h2 style="margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -.01em;">Page pattern — fleet dashboard</h2>
+        <span style="font-size: 12px; color: #5a6483;">sidebar + KPI band + server cards</span>
+      </div>
+
+      <div style="display: flex; background: #070b14; border: 1px solid #1e2742; border-radius: 14px; overflow: hidden; min-height: 460px;">
+        <div style="width: 208px; flex: none; border-right: 1px solid #1e2742; background: #0a0f1e; padding: 18px 12px; display: flex; flex-direction: column; gap: 4px;">
+          <div style="padding: 0 10px 14px; display: flex; align-items: center; gap: 9px;">
+            <div style="width: 18px; height: 18px; border-radius: 5px; background: linear-gradient(140deg, #3b82f6, #1d4ed8);"></div>
+            <span style="font-size: 12.5px; font-weight: 650;">Fleet</span>
+          </div>
+          <sc-for list="{{ nav }}" as="n" hint-placeholder-count="6">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; font-size: 12.5px; cursor: pointer; background: {{ n.bg }}; color: {{ n.color }}; box-shadow: {{ n.rail }};">
+              <span style="width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .55;"></span>
+              <span style="flex: 1;">{{ n.label }}</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #5a6483;">{{ n.count }}</span>
+            </div>
+          </sc-for>
+          <div style="flex: 1;"></div>
+          <div style="padding: 10px; border: 1px solid #1e2742; border-radius: 8px; display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-size: 11px; color: #5a6483;">Poll interval</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">60s</span>
+          </div>
+        </div>
+
+        <div style="flex: 1; min-width: 0; padding: 22px 24px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; align-items: flex-end; gap: 12px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 22px; font-weight: 650; letter-spacing: -.02em;">Fleet overview</span>
+              <span style="font-size: 12px; color: #8892b0;">4 servers · 18 instances · last sweep 12s ago</span>
+            </div>
+            <div style="flex: 1;"></div>
+            <button style="{{ btnAccentSm }}">Add server</button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;">
+            <sc-for list="{{ kpis4 }}" as="k" hint-placeholder-count="4">
+              <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+                <span style="font-size: 10.5px; font-weight: 500; letter-spacing: .05em; text-transform: uppercase; color: #5a6483;">{{ k.label }}</span>
+                <span style="font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; color: {{ k.color }};">{{ k.value }}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;">
+            <sc-for list="{{ servers }}" as="s" hint-placeholder-count="4">
+              <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;" style-hover="border-color: #2a3454; background: #0e142a;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="width: 7px; height: 7px; border-radius: 50%; background: {{ s.color }};"></span>
+                  <span style="font-size: 13px; font-weight: 600;">{{ s.name }}</span>
+                  <div style="flex: 1;"></div>
+                  <span style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: {{ s.soft }}; color: {{ s.color }};">{{ s.status }}</span>
+                </div>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5a6483;">{{ s.host }}</span>
+                <div style="display: flex; gap: 4px;">
+                  <sc-for list="{{ s.bars }}" as="bar" hint-placeholder-count="6">
+                    <div style="flex: 1; height: 22px; border-radius: 3px; background: {{ bar }};"></div>
+                  </sc-for>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: #8892b0;">
+                  <span>{{ s.instances }} instances</span>
+                  <span style="font-family: 'JetBrains Mono', monospace;">{{ s.load }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+        <sc-for list="{{ rules }}" as="r" hint-placeholder-count="4">
+          <div style="background: #0c1123; border: 1px solid #1e2742; border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 7px;">
+            <span style="font-size: 12.5px; font-weight: 600;">{{ r.title }}</span>
+            <span style="font-size: 12.5px; line-height: 1.6; color: #8892b0; text-wrap: pretty;">{{ r.body }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#3b82f6&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#3b82f6&quot;,&quot;#38bdf8&quot;,&quot;#8b5cf6&quot;,&quot;#22c55e&quot;],&quot;section&quot;:&quot;Theme&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;comfortable&quot;,&quot;options&quot;:[&quot;comfortable&quot;,&quot;compact&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Theme&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? "#3b82f6";
+    const S = { ok: "#22c55e", warn: "#eab308", bad: "#ef4444", info: "#38bdf8", muted: "#5a6483" };
+    const soft = { ok: "rgba(34,197,94,.12)", warn: "rgba(234,179,8,.12)", bad: "rgba(239,68,68,.12)", info: "rgba(56,189,248,.12)", muted: "rgba(90,100,131,.14)" };
+    const dense = (this.props.density ?? "comfortable") === "compact";
+    const bar = (v) => v > 85 ? S.bad : v > 65 ? S.warn : "rgba(34,197,94,.55)";
+
+    return {
+      btnAccent: `font:500 13px Inter,sans-serif;padding:8px 14px;border-radius:6px;border:1px solid ${accent};background:${accent};color:#06101f;cursor:pointer;box-shadow:0 0 20px rgba(59,130,246,.25)`,
+      btnAccentSm: `font:500 12px Inter,sans-serif;padding:6px 12px;border-radius:6px;border:1px solid ${accent};background:${accent};color:#06101f;cursor:pointer`,
+      statusTokens: [
+        { name: "accent", hex: accent, soft: "rgba(59,130,246,.12)", label: "primary", use: "actions, links" },
+        { name: "success", hex: S.ok, soft: soft.ok, label: "healthy", use: "running normally" },
+        { name: "warning", hex: S.warn, soft: soft.warn, label: "degraded", use: "not failing yet" },
+        { name: "danger", hex: S.bad, soft: soft.bad, label: "critical", use: "needs attention" },
+        { name: "info", hex: S.info, soft: soft.info, label: "running", use: "in-progress jobs" },
+        { name: "muted", hex: S.muted, soft: soft.muted, label: "unreachable", use: "no response" }
+      ],
+      spacing: [1, 2, 3, 4, 5, 6, 8, 10].map(n => ({ n, px: (n * 4) + "px" })),
+      badges: [
+        { text: "healthy", color: S.ok, soft: soft.ok },
+        { text: "degraded", color: S.warn, soft: soft.warn },
+        { text: "failed", color: S.bad, soft: soft.bad },
+        { text: "restarting", color: S.info, soft: soft.info },
+        { text: "unreachable", color: S.muted, soft: soft.muted },
+        { text: "unknown", color: "#8892b0", soft: "rgba(136,146,176,.12)" }
+      ],
+      kpis4: [
+        { label: "Servers", value: "4", sub: "all registered", color: "#e2e8f0" },
+        { label: "Healthy", value: "16", sub: "of 18 instances", color: S.ok },
+        { label: "Degraded", value: "1", sub: "trade3:8004", color: S.warn },
+        { label: "Failed", value: "1", sub: "since 09:41 IST", color: S.bad }
+      ],
+      kpis: [
+        { label: "Servers", value: "4", sub: "all registered", color: "#e2e8f0" },
+        { label: "Healthy", value: "16", sub: "of 18 instances", color: S.ok },
+        { label: "Degraded", value: "1", sub: "trade3:8004", color: S.warn },
+        { label: "Failed", value: "1", sub: "since 09:41 IST", color: S.bad },
+        { label: "p95 health", value: dense ? "212ms" : "212 ms", sub: "last 15 min", color: "#e2e8f0" }
+      ],
+      rows: [
+        { server: "trade1", instance: "oa-main :8001", status: "healthy", color: S.ok, soft: soft.ok, cpu: "12%", mem: "412 MB", poll: "8s ago" },
+        { server: "trade1", instance: "oa-hedge :8002", status: "healthy", color: S.ok, soft: soft.ok, cpu: "9%", mem: "388 MB", poll: "8s ago" },
+        { server: "trade2", instance: "oa-main :8001", status: "restarting", color: S.info, soft: soft.info, cpu: "—", mem: "—", poll: "2s ago" },
+        { server: "trade3", instance: "oa-scalp :8004", status: "degraded", color: S.warn, soft: soft.warn, cpu: "78%", mem: "1.2 GB", poll: "11s ago" },
+        { server: "trade3", instance: "oa-arb :8005", status: "failed", color: S.bad, soft: soft.bad, cpu: "0%", mem: "0 MB", poll: "11s ago" },
+        { server: "trade4", instance: "oa-main :8001", status: "unreachable", color: S.muted, soft: soft.muted, cpu: "—", mem: "—", poll: "4m ago" }
+      ],
+      logLines: [
+        { t: "09:41:02", text: "$ ssh deploy@trade4.example.com", color: "#8892b0" },
+        { t: "09:41:03", text: "fetching multi-install.sh @ main", color: "#e2e8f0" },
+        { t: "09:41:06", text: "docker pull openalgo/core:1.4.2 ... done", color: "#e2e8f0" },
+        { t: "09:41:14", text: "WARN port 8003 already bound, trying 8004", color: S.warn },
+        { t: "09:41:15", text: "writing /etc/openalgo/oa-arb.env", color: "#e2e8f0" },
+        { t: "09:41:22", text: "systemctl enable --now openalgo@oa-arb", color: "#e2e8f0" },
+        { t: "09:41:29", text: "health check :8004 → 200 OK", color: S.ok },
+        { t: "09:41:30", text: "instance registered, awaiting poller", color: S.info }
+      ],
+      audit: [
+        { text: "jabez restarted trade1 / oa-main", time: "09:44", color: S.ok },
+        { text: "poller marked trade4 unreachable", time: "09:40", color: S.muted },
+        { text: "asha provisioned oa-arb on trade3", time: "09:12", color: S.info },
+        { text: "jabez rotated admin API password", time: "08:55", color: "#8892b0" }
+      ],
+      nav: [
+        { label: "Overview", count: "", bg: "rgba(59,130,246,.12)", color: "#e2e8f0", rail: `inset 2px 0 0 ${accent}` },
+        { label: "Servers", count: "4", bg: "transparent", color: "#8892b0", rail: "none" },
+        { label: "Instances", count: "18", bg: "transparent", color: "#8892b0", rail: "none" },
+        { label: "Provisioning", count: "1", bg: "transparent", color: "#8892b0", rail: "none" },
+        { label: "Audit log", count: "", bg: "transparent", color: "#8892b0", rail: "none" },
+        { label: "Settings", count: "", bg: "transparent", color: "#8892b0", rail: "none" }
+      ],
+      servers: [
+        { name: "trade1", host: "trade1.example.com", status: "healthy", color: S.ok, soft: soft.ok, instances: 5, load: "0.42", bars: [22, 30, 26, 41, 35, 28].map(bar) },
+        { name: "trade2", host: "trade2.example.com", status: "healthy", color: S.ok, soft: soft.ok, instances: 6, load: "0.71", bars: [40, 52, 46, 61, 55, 48].map(bar) },
+        { name: "trade3", host: "trade3.example.com", status: "degraded", color: S.warn, soft: soft.warn, instances: 4, load: "2.18", bars: [61, 72, 88, 79, 91, 68].map(bar) },
+        { name: "trade4", host: "trade4.example.com", status: "unreachable", color: S.muted, soft: soft.muted, instances: 3, load: "—", bars: ["#161e33", "#161e33", "#161e33", "#161e33", "#161e33", "#161e33"] }
+      ],
+      rules: [
+        { title: "Status colour is load-bearing", body: "Never use success or danger decoratively. A green pill in this product means a live health check returned 200." },
+        { title: "Mono for machine values", body: "Hosts, ports, versions, keys, timestamps and log output are JetBrains Mono. Prose and labels are Inter." },
+        { title: "Destructive actions confirm", body: "Reboot, remove server and stop-all open a dialog naming the exact target and the blast radius in instances." },
+        { title: "Density over whitespace", body: "Operators scan 20+ rows at once: 10/14px table cells, 13px rows, no card nested inside a card." }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

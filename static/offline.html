@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Offline - OpenAlgo Fleet Manager</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+body { display: grid; min-height: 100vh; place-items: center; padding: 24px; }
+.offline { max-width: 420px; text-align: center; }
+.offline h1 { margin-bottom: 10px; font-size: 20px; }
+.offline p { margin-bottom: 18px; color: var(--text-secondary, #a8b2cc); font-size: 14px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="offline">
+<h1>You're offline</h1>
+<p>Fleet status is read live from each server, so there is nothing useful to show without a connection. Reconnect and try again.</p>
+<button class="btn btn-accent" onclick="location.reload()">Retry</button>
+</div>
+</body>
+</html>

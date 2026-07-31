@@ -4,7 +4,7 @@ import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Depends
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -82,6 +82,20 @@ async def global_auth_middleware(request: Request, call_next):
         return RedirectResponse(url=f"/login?next={str(request.url)}", status_code=302)
 
     return await call_next(request)
+
+
+@app.get("/sw.js", include_in_schema=False)
+async def service_worker():
+    """Served from the root so the worker's scope covers the whole app.
+
+    Under /static/ it could only control /static/ - which is the one part of the
+    app that does not need it.
+    """
+    return FileResponse(
+        os.path.join(os.path.dirname(__file__), "..", "static", "sw.js"),
+        media_type="text/javascript",
+        headers={"Cache-Control": "no-cache"},
+    )
 
 
 app.include_router(auth_router)

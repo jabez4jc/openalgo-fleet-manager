@@ -21,12 +21,26 @@ async def _check_password_change(request: Request, db: AsyncSession):
     return False
 
 
+# Installability tags. Must be on every page the user can be looking at when
+# they tap "Install app" - including /login, which is where a logged-out visit
+# lands. auth_router imports this for its own two templates.
+PWA_HEAD = """<link rel="manifest" href="/static/manifest.webmanifest">
+<meta name="theme-color" content="#070b14">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="/static/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
+<script>
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(console.warn));
+</script>"""
+# No braces in that script on purpose - LOGIN_TEMPLATE runs through str.format().
+
 BASE_TEMPLATE_START = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OpenAlgo Fleet Manager</title>
+""" + PWA_HEAD + """
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
