@@ -10,182 +10,237 @@
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<div class="topbar">
+<!-- Static gallery of every class in style.css. No data, no auth - open /static/preview.html
+     after a CSS change and check the components here before hunting for them in the app. -->
+<div class="app-shell">
+<aside class="sidebar">
 <div class="brand">
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-<b>OpenAlgo Fleet Manager</b>
+<div class="brand-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M12 5v14"/></svg></div>
+<div><b>OpenAlgo Fleet</b><small>Operations console</small></div>
+</div>
+<div class="sidebar-section-label">Operate</div>
+<nav class="sidebar-nav">
+<a href="#" class="nav-link active"><span>Overview</span></a>
+<a href="#" class="nav-link"><span>Servers</span></a>
+<a href="#" class="nav-link"><span>Provision</span></a>
+<a href="#" class="nav-link"><span>Jobs</span></a>
+<div class="sidebar-section-label" style="margin-top:25px">Governance</div>
+<a href="#" class="nav-link"><span>Audit log</span></a>
+</nav>
+<div class="sidebar-footer">
+<div class="sidebar-status"><span class="dot pulse"></span><span>Monitoring active</span></div>
+<a href="#" class="nav-link"><span>Sign out</span></a>
+</div>
+</aside>
+
+<div class="app-main">
+<header class="topbar">
+<div class="topbar-left">
+<div class="breadcrumb"><span>Fleet</span><strong>Design preview</strong></div>
 </div>
 <div class="topbar-right">
-<a href="#" class="nav-link active">Dashboard</a>
-<a href="#" class="nav-link">Servers</a>
-<a href="#" class="nav-link">Provision</a>
-<a href="#" class="nav-link">Jobs</a>
-<a href="#" class="nav-link">Audit Log</a>
-<a href="#" class="nav-link">Logout</a>
-<span class="live"><span class="dot pulse"></span><span>Connected</span></span>
+<span class="live"><span class="dot pulse"></span><span>poller live · 60s</span></span>
+<div class="user-chip"><span class="user-avatar">JC</span><span>jabez</span></div>
 </div>
-</div>
+</header>
 
-<main style="max-width:900px">
+<main>
+
+<div class="page-intro">
+<div><div class="eyebrow">Design system</div><h1>Serious tooling for serious money.</h1><p>Every token and component below maps to a class in static/style.css.</p></div>
+<div class="page-actions"><button class="btn btn-accent">Add server</button></div>
+</div>
 
 <div class="card">
-<div class="card-head"><h2>Fleet Overview</h2>
-<div style="display:flex;gap:8px">
-<a href="#" class="btn btn-accent btn-sm">Add Server</a>
-<button class="btn btn-ghost btn-sm">Refresh</button>
-</div>
-</div>
+<div class="card-head"><div><h2>Fleet overview</h2><div class="card-subtitle">KPI band — tabular numerals, status-coloured values</div></div><span class="mono">4 servers</span></div>
 <div class="kpi-row">
-<div class="kpi"><div class="kpi-label">Servers</div><div class="kpi-value">3</div></div>
-<div class="kpi"><div class="kpi-label">Instances</div><div class="kpi-value">12</div></div>
-<div class="kpi"><div class="kpi-label">Healthy</div><div class="kpi-value" style="color:var(--success)">9</div></div>
-<div class="kpi"><div class="kpi-label">Warning</div><div class="kpi-value" style="color:var(--warning)">2</div></div>
-<div class="kpi"><div class="kpi-label">Critical</div><div class="kpi-value" style="color:var(--danger)">1</div></div>
+<div class="kpi"><div class="kpi-label">Servers</div><div class="kpi-value">4</div><div class="kpi-detail">all registered</div></div>
+<div class="kpi"><div class="kpi-label">Healthy</div><div class="kpi-value" style="color:var(--success)">16</div><div class="kpi-detail">of 18 instances</div></div>
+<div class="kpi"><div class="kpi-label">Degraded</div><div class="kpi-value" style="color:var(--warning)">1</div><div class="kpi-detail">trade3:8004</div></div>
+<div class="kpi"><div class="kpi-label">Failed</div><div class="kpi-value" style="color:var(--danger)">1</div><div class="kpi-detail">since 09:41 IST</div></div>
+<div class="kpi"><div class="kpi-label">Unreachable</div><div class="kpi-value" style="color:var(--text-muted)">1</div><div class="kpi-detail">trade4, 4m ago</div></div>
 </div>
 </div>
 
 <div class="card">
-<div class="card-head"><h2>Typography</h2></div>
-<div style="padding:20px;display:flex;flex-direction:column;gap:8px">
-<div style="font-size:24px;font-weight:700">Heading — Inter 700 24px</div>
-<div style="font-size:20px;font-weight:650">Subheading — Inter 650 20px</div>
-<div style="font-size:16px;font-weight:600">Card title — Inter 600 16px</div>
-<div style="font-size:14px;font-weight:500">Body — Inter 500 14px</div>
-<div style="font-size:13px;font-weight:400">Small body — Inter 400 13px</div>
-<div style="font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin-top:12px">TABLE HEADER — UPPERCASE 11.5px</div>
-<div class="mono" style="margin-top:8px">console.log("Monospace — JetBrains Mono 12px");</div>
-<div class="mono" style="font-size:11.5px">[2026-07-30 12:00:00] Log output — JetBrains Mono 11.5px</div>
+<div class="card-head"><div><h2>Surfaces</h2><div class="card-subtitle">Dark-first elevation ladder</div></div></div>
+<div class="server-card-grid">
+<div class="server-card"><div style="height:52px;border-radius:var(--radius-sm);background:var(--bg-deep);border:1px solid var(--border)"></div><div class="server-card-bottom"><span>bg-deep</span><span class="mono">#070b14</span></div></div>
+<div class="server-card"><div style="height:52px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border)"></div><div class="server-card-bottom"><span>bg</span><span class="mono">#0c1123</span></div></div>
+<div class="server-card"><div style="height:52px;border-radius:var(--radius-sm);background:var(--bg-elevated);border:1px solid var(--border)"></div><div class="server-card-bottom"><span>bg-elevated</span><span class="mono">#111728</span></div></div>
+<div class="server-card"><div style="height:52px;border-radius:var(--radius-sm);background:var(--bg-inset);border:1px solid var(--border)"></div><div class="server-card-bottom"><span>bg-inset</span><span class="mono">#161e33</span></div></div>
+<div class="server-card"><div style="height:52px;border-radius:var(--radius-sm);background:var(--border)"></div><div class="server-card-bottom"><span>border</span><span class="mono">#1e2742</span></div></div>
+<div class="server-card"><div style="height:52px;border-radius:var(--radius-sm);background:var(--border-hover)"></div><div class="server-card-bottom"><span>border-hover</span><span class="mono">#2a3454</span></div></div>
 </div>
 </div>
 
 <div class="card">
-<div class="card-head"><h2>Color Palette</h2></div>
-<div style="padding:20px;display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
-<div style="padding:16px;border-radius:var(--radius-md);background:var(--bg-deep);border:1px solid var(--border)"><div style="font-size:11px;color:var(--text-muted)">bg-deep</div><div style="font-size:11px;color:var(--text-muted);font-family:monospace">#070b14</div></div>
-<div style="padding:16px;border-radius:var(--radius-md);background:var(--bg);border:1px solid var(--border)"><div style="font-size:11px;color:var(--text-muted)">bg</div><div style="font-size:11px;color:var(--text-muted);font-family:monospace">#0c1123</div></div>
-<div style="padding:16px;border-radius:var(--radius-md);background:var(--bg-elevated);border:1px solid var(--border)"><div style="font-size:11px;color:var(--text-muted)">bg-elevated</div><div style="font-size:11px;color:var(--text-muted);font-family:monospace">#111728</div></div>
-<div style="padding:16px;border-radius:var(--radius-md);background:var(--bg-inset);border:1px solid var(--border)"><div style="font-size:11px;color:var(--text-muted)">bg-inset</div><div style="font-size:11px;color:var(--text-muted);font-family:monospace">#161e33</div></div>
-<div style="padding:16px;border-radius:var(--radius-md);background:#fff;border:1px solid var(--border)"><div style="font-size:11px;color:#333">Text</div><div style="font-size:11px;color:#333;font-family:monospace">#e2e8f0</div></div>
-</div>
-<div style="padding:0 20px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
-<div style="padding:16px;border-radius:var(--radius-md);background:var(--accent-soft);border:1px solid var(--accent)"><div style="font-size:11px;color:var(--accent)">accent</div><div style="font-size:11px;color:var(--accent);font-family:monospace">#3b82f6</div></div>
-<div style="padding:16px;border-radius:var(--radius-md);background:var(--success-soft);border:1px solid var(--success)"><div style="font-size:11px;color:var(--success)">success</div><div style="font-size:11px;color:var(--success);font-family:monospace">#22c55e</div></div>
-<div style="padding:16px;border-radius:var(--radius-md);background:var(--warning-soft);border:1px solid var(--warning)"><div style="font-size:11px;color:var(--warning)">warning</div><div style="font-size:11px;color:var(--warning);font-family:monospace">#eab308</div></div>
-<div style="padding:16px;border-radius:var(--radius-md);background:var(--danger-soft);border:1px solid var(--danger)"><div style="font-size:11px;color:var(--danger)">danger</div><div style="font-size:11px;color:var(--danger);font-family:monospace">#ef4444</div></div>
+<div class="card-head"><div><h2>Status tokens</h2><div class="card-subtitle">Colour is load-bearing — never decorative</div></div></div>
+<div class="server-card-grid">
+<div class="server-card"><div class="server-card-top"><span class="badge badge-healthy">healthy</span><span class="mono" style="margin-left:auto">#22c55e</span></div><div class="server-card-host">running normally</div></div>
+<div class="server-card"><div class="server-card-top"><span class="badge badge-warning">degraded</span><span class="mono" style="margin-left:auto">#eab308</span></div><div class="server-card-host">not failing yet</div></div>
+<div class="server-card"><div class="server-card-top"><span class="badge badge-critical">critical</span><span class="mono" style="margin-left:auto">#ef4444</span></div><div class="server-card-host">needs attention</div></div>
+<div class="server-card"><div class="server-card-top"><span class="badge badge-info">running</span><span class="mono" style="margin-left:auto">#38bdf8</span></div><div class="server-card-host">in-progress jobs</div></div>
+<div class="server-card"><div class="server-card-top"><span class="badge badge-unreachable">unreachable</span><span class="mono" style="margin-left:auto">#5a6483</span></div><div class="server-card-host">no response</div></div>
+<div class="server-card"><div class="server-card-top"><span class="badge badge-unknown">unknown</span><span class="mono" style="margin-left:auto">#8892b0</span></div><div class="server-card-host">not yet polled</div></div>
 </div>
 </div>
 
 <div class="card">
-<div class="card-head"><h2>Buttons</h2></div>
-<div style="padding:20px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-<button class="btn">Default</button>
-<button class="btn btn-sm">Small</button>
-<button class="btn btn-accent">Accent</button>
-<button class="btn btn-ghost">Ghost</button>
-<button class="btn btn-sm btn-accent">Small Accent</button>
-<button class="btn btn-danger">Danger</button>
-<button class="btn btn-success">Success</button>
-<button class="btn btn-warning">Warning</button>
+<div class="card-head"><div><h2>Type scale</h2><div class="card-subtitle">Inter for prose, JetBrains Mono for machine values</div></div></div>
+<div class="form-card" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font-size:28px;font-weight:650;letter-spacing:-.02em">Fleet overview</span><span class="mono">28/650</span></div>
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font-size:18px;font-weight:600">Section heading</span><span class="mono">18/600</span></div>
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font-size:14px">Card &amp; form body copy</span><span class="mono">14/400</span></div>
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font-size:13px">Table row text</span><span class="mono">13/400</span></div>
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font-size:11.5px;color:var(--text-secondary)">Metadata and labels</span><span class="mono">11.5/400</span></div>
+<div style="display:flex;align-items:baseline;gap:14px"><span class="mono" style="font-size:12px;color:var(--text-primary)">GET /api/health → 200</span><span class="mono">mono 12</span></div>
 </div>
 </div>
 
 <div class="card">
-<div class="card-head"><h2>Badges & Status</h2></div>
-<div style="padding:20px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-<span class="badge badge-healthy">healthy</span>
-<span class="badge badge-warning">warning</span>
-<span class="badge badge-critical">critical</span>
-<span class="badge badge-unreachable">unreachable</span>
-<span class="badge badge-unknown">unknown</span>
-</div>
-</div>
-
-<div class="card">
-<div class="card-head"><h2>Table</h2></div>
-<table><thead><tr><th>Server</th><th>URL</th><th>Instances</th><th>Healthy</th><th>Warning</th><th>Critical</th><th>Last Seen</th><th></th></tr></thead>
-<tbody>
-<tr>
-<td><a href="#" style="color:var(--accent);text-decoration:none;font-weight:600">prod-us-east-1</a></td>
-<td class="mono" style="font-size:12px;color:var(--text-secondary)">https://trade1.example.com</td>
-<td style="font-weight:600">4</td>
-<td><span class="badge badge-healthy">3</span></td>
-<td><span class="badge badge-warning">1</span></td>
-<td><span class="badge badge-critical">0</span></td>
-<td style="font-size:12px;color:var(--text-muted)">Jul 30, 12:00</td>
-<td><button class="btn btn-sm btn-ghost">View</button></td>
-</tr>
-<tr>
-<td><a href="#" style="color:var(--accent);text-decoration:none;font-weight:600">prod-eu-west-1</a></td>
-<td class="mono" style="font-size:12px;color:var(--text-secondary)">https://trade2.example.com</td>
-<td style="font-weight:600">6</td>
-<td><span class="badge badge-healthy">4</span></td>
-<td><span class="badge badge-warning">1</span></td>
-<td><span class="badge badge-critical">1</span></td>
-<td style="font-size:12px;color:var(--text-muted)">Jul 30, 11:58</td>
-<td><button class="btn btn-sm btn-ghost">View</button></td>
-</tr>
-</tbody></table>
-</div>
-
-<div class="card">
-<div class="card-head"><h2>Server Detail</h2></div>
-<div class="server-meta">
-<div class="server-meta-item"><span class="server-meta-label">URL</span><span class="server-meta-value">https://trade1.example.com</span></div>
-<div class="server-meta-item"><span class="server-meta-label">Admin</span><span>fleetmgr</span></div>
-<div class="server-meta-item"><span class="server-meta-label">SSH</span><span>ubuntu@192.168.1.10:22</span></div>
-<div class="server-meta-item"><span class="server-meta-label">Instances</span><span style="font-weight:600">4</span></div>
-<div class="server-meta-item"><span class="server-meta-label">Last poll</span><span class="mono">2026-07-30 12:00:00</span></div>
-</div>
-</div>
-
-<div class="card">
-<div class="card-head"><h2>Action Panel</h2></div>
+<div class="card-head"><div><h2>Buttons</h2><div class="card-subtitle">Destructive variants keep their colour on hover</div></div><span class="mono">.btn</span></div>
 <div class="action-bar">
-<button class="btn btn-sm">Restart All</button>
-<button class="btn btn-sm btn-success">Health Check All</button>
-<button class="btn btn-sm">Update All</button>
-<button class="btn btn-sm btn-danger">Reboot Server</button>
+<button class="btn btn-accent">Restart instance</button>
+<button class="btn">Health check</button>
+<button class="btn btn-success">Start</button>
+<button class="btn btn-warning">Stop</button>
+<button class="btn btn-danger">Reboot server</button>
 </div>
 <div class="section-divider">
-<button class="btn btn-sm">Run Backup</button>
-<button class="btn btn-sm">Backup List</button>
-<button class="btn btn-sm">Patch Self-Test</button>
+<button class="btn btn-sm">Small</button>
+<button class="btn btn-sm btn-accent">Small accent</button>
+<button class="btn btn-sm btn-ghost">Ghost</button>
+<button class="btn" disabled>Disabled</button>
 </div>
 </div>
 
 <div class="card">
-<div class="card-head"><h2>Log Viewer</h2></div>
-<div class="job-log-viewer">[2026-07-30 12:00:01] Connecting via SSH...
-[2026-07-30 12:00:02] Writing config file on remote server...
-[2026-07-30 12:00:05] Running multi-install.sh...
-[2026-07-30 12:00:45] multi-install.sh completed successfully
-[2026-07-30 12:00:45] Setting admin password...
-[2026-07-30 12:00:46] Provisioning complete.</div>
+<div class="card-head"><div><h2>Instances</h2><div class="card-subtitle">Numeric columns right-aligned with .num</div></div><span class="mono">6 of 6</span></div>
+<div class="table-wrap"><table>
+<thead><tr><th>Server</th><th>Instance</th><th>Status</th><th class="num">CPU</th><th class="num">Mem</th><th>Last poll</th><th></th></tr></thead>
+<tbody>
+<tr><td><a href="#">trade1</a></td><td class="mono">openalgo1</td><td><span class="badge badge-healthy">healthy</span></td><td class="num">12%</td><td class="num">412 MB</td><td style="color:var(--text-muted);font-size:11.5px">8s ago</td><td><button class="btn btn-sm btn-ghost">Logs</button></td></tr>
+<tr><td><a href="#">trade1</a></td><td class="mono">openalgo2</td><td><span class="badge badge-healthy">healthy</span></td><td class="num">9%</td><td class="num">388 MB</td><td style="color:var(--text-muted);font-size:11.5px">8s ago</td><td><button class="btn btn-sm btn-ghost">Logs</button></td></tr>
+<tr><td><a href="#">trade2</a></td><td class="mono">openalgo1</td><td><span class="badge badge-info">restarting</span></td><td class="num">—</td><td class="num">—</td><td style="color:var(--text-muted);font-size:11.5px">2s ago</td><td><button class="btn btn-sm btn-ghost">Logs</button></td></tr>
+<tr><td><a href="#">trade3</a></td><td class="mono">openalgo4</td><td><span class="badge badge-critical" title="systemd says active but the instance answers nothing">wedged</span></td><td class="num">78%</td><td class="num">1.2 GB</td><td style="color:var(--text-muted);font-size:11.5px">11s ago</td><td><button class="btn btn-sm btn-ghost">Logs</button></td></tr>
+<tr><td><a href="#">trade4</a></td><td class="mono">openalgo1</td><td><span class="badge badge-unreachable">unreachable</span></td><td class="num">—</td><td class="num">—</td><td style="color:var(--text-muted);font-size:11.5px">4m ago</td><td><button class="btn btn-sm btn-ghost">Logs</button></td></tr>
+</tbody>
+</table></div>
 </div>
 
 <div class="card">
-<div class="card-head"><h2>Form Elements</h2></div>
-<div style="padding:20px">
-<label class="reset-field-label">Server Name</label>
-<input class="reset-input" type="text" placeholder="e.g. prod-server-1">
-<label class="reset-field-label">Admin API URL</label>
-<input class="reset-input" type="text" placeholder="https://server-ip:8888">
-<label class="reset-field-label">Broker</label>
-<select class="reset-input">
-<option>zerodha</option>
-<option>angel</option>
-<option>upstox</option>
-</select>
-<label class="reset-field-label">SSH Private Key</label>
-<textarea class="mono" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:12px;min-height:80px;resize:vertical" placeholder="-----BEGIN RSA PRIVATE KEY-----"></textarea>
-<hr style="border-color:var(--border);margin:16px 0">
-<div style="display:flex;gap:10px;justify-content:flex-end">
+<div class="card-head"><div><h2>Server cards</h2><div class="card-subtitle">One bar per instance, coloured by health</div></div></div>
+<div class="server-card-grid">
+<a href="#" class="server-card">
+<div class="server-card-top"><strong>trade1</strong><span class="badge badge-healthy">healthy</span></div>
+<div class="server-card-host">trade1.example.com</div>
+<div class="server-bars"><span class="server-bar healthy"></span><span class="server-bar healthy"></span><span class="server-bar healthy"></span><span class="server-bar healthy"></span><span class="server-bar healthy"></span></div>
+<div class="server-card-bottom"><span>5 instances</span><span class="mono">0.42</span></div>
+</a>
+<a href="#" class="server-card">
+<div class="server-card-top"><strong>trade3</strong><span class="badge badge-warning">degraded</span></div>
+<div class="server-card-host">trade3.example.com</div>
+<div class="server-bars"><span class="server-bar healthy"></span><span class="server-bar healthy"></span><span class="server-bar warning"></span><span class="server-bar critical"></span></div>
+<div class="server-card-bottom"><span>4 instances</span><span class="mono">2.18</span></div>
+</a>
+<a href="#" class="server-card">
+<div class="server-card-top"><strong>trade4</strong><span class="badge badge-unreachable">unreachable</span></div>
+<div class="server-card-host">trade4.example.com</div>
+<div class="server-bars"><span class="server-bar muted"></span><span class="server-bar muted"></span><span class="server-bar muted"></span></div>
+<div class="server-card-bottom"><span>3 instances</span><span class="mono">—</span></div>
+</a>
+</div>
+</div>
+
+<div class="card">
+<div class="card-head"><div><h2>Server detail</h2><div class="card-subtitle">Metadata strip</div></div></div>
+<div class="server-meta">
+<div class="server-meta-item"><span class="server-meta-label">URL</span><span class="server-meta-value">https://trade1.example.com:8888</span></div>
+<div class="server-meta-item"><span class="server-meta-label">Admin</span><span>fleetmgr</span></div>
+<div class="server-meta-item"><span class="server-meta-label">SSH</span><span>deploy@192.168.1.10:22</span></div>
+<div class="server-meta-item"><span class="server-meta-label">Instances</span><span style="font-weight:600">4</span></div>
+<div class="server-meta-item"><span class="server-meta-label">Last poll</span><span class="mono">2026-08-01 09:41:29</span></div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-head"><div><h2>Provisioning log</h2><div class="card-subtitle">multi-install.sh over SSH</div></div><span class="badge badge-info">running</span></div>
+<div class="job-log-viewer">09:41:02  $ ssh deploy@trade4.example.com
+09:41:03  fetching multi-install.sh @ main
+09:41:06  syncing /opt/openalgo-scripts ... done
+09:41:14  WARN port 8003 already bound, trying 8004
+09:41:15  writing /tmp/instance-42.env (0600)
+09:41:22  systemctl enable --now openalgo-trade4-example-com
+09:41:29  health check :8004 → 200 OK
+09:41:30  instance registered, awaiting poller</div>
+<div class="action-panel-footer"><button class="btn btn-sm">Close</button></div>
+</div>
+
+<div class="card">
+<div class="card-head"><div><h2>Form controls</h2><div class="card-subtitle">Labels 11.5px, mono inputs for machine values</div></div><span class="mono">.reset-input</span></div>
+<div class="form-card">
+<div class="form-grid">
+<div class="field-full">
+<label class="reset-field-label">Server base URL</label>
+<input class="reset-input mono" type="text" value="https://trade1.example.com:8888">
+<div class="help-text">Must expose openalgo-restart-api over HTTPS.</div>
+</div>
+<div>
+<label class="reset-field-label">SSH user</label>
+<input class="reset-input" type="text" value="deploy">
+</div>
+<div>
+<label class="reset-field-label">Port</label>
+<input class="reset-input mono" type="text" value="22">
+</div>
+<div class="field-full">
+<label class="reset-field-label">SSH private key</label>
+<textarea class="reset-input mono" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"></textarea>
+</div>
+</div>
+<div class="form-actions">
 <button class="btn">Cancel</button>
-<button class="btn btn-accent">Save Changes</button>
+<button class="btn btn-accent">Save changes</button>
 </div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-head"><div><h2>Toasts, dialog, empty state</h2><div class="card-subtitle">Status rail on the left edge</div></div></div>
+<div class="form-card" style="display:flex;flex-direction:column;gap:12px">
+<div class="toast success"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span class="toast-msg">Instance <span class="mono">openalgo1</span> restarted</span><button class="toast-close">&times;</button></div>
+<div class="toast error"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg><span class="toast-msg">SSH provisioning failed — exit 255</span><button class="toast-close">&times;</button></div>
+<div class="toast info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16v-4M12 8h.01"/><circle cx="12" cy="12" r="9"/></svg><span class="toast-msg">Job queued — polling <span class="mono">/api/jobs/8f3c</span></span><button class="toast-close">&times;</button></div>
+
+<div class="dialog" style="margin-top:6px">
+<h2>Reboot trade2.example.com?</h2>
+<p class="confirm-text">3 running instances will be interrupted for roughly 40 seconds. Open positions are unaffected.</p>
+<div class="dialog-actions">
+<button class="btn">Cancel</button>
+<button class="btn btn-danger">Reboot</button>
+</div>
+</div>
+</div>
+<div class="empty-state">
+<strong>No servers registered</strong>
+Add a server with its admin API credentials and the poller will discover instances within 60 seconds.
+<a href="#">Add server →</a>
+</div>
+</div>
+
+<div class="card">
+<div class="card-head"><div><h2>Design rules</h2><div class="card-subtitle">Applies to every screen</div></div></div>
+<div class="server-card-grid">
+<div class="server-card"><strong style="font-size:12.5px">Status colour is load-bearing</strong><span style="font-size:12.5px;line-height:1.6;color:var(--text-secondary)">Never use success or danger decoratively. A green pill means a live health check returned 200.</span></div>
+<div class="server-card"><strong style="font-size:12.5px">Mono for machine values</strong><span style="font-size:12.5px;line-height:1.6;color:var(--text-secondary)">Hosts, ports, versions, keys, timestamps and log output are JetBrains Mono. Prose and labels are Inter.</span></div>
+<div class="server-card"><strong style="font-size:12.5px">Destructive actions confirm</strong><span style="font-size:12.5px;line-height:1.6;color:var(--text-secondary)">Reboot, stop and remove name the exact target and the blast radius in instances.</span></div>
+<div class="server-card"><strong style="font-size:12.5px">Density over whitespace</strong><span style="font-size:12.5px;line-height:1.6;color:var(--text-secondary)">Operators scan 20+ rows at once: 10/14px table cells, 13px rows, no card nested inside a card.</span></div>
 </div>
 </div>
 
 </main>
+</div>
+</div>
 </body>
 </html>

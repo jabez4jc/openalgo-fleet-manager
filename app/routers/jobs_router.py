@@ -81,7 +81,8 @@ async def jobs_page(request: Request, db: AsyncSession = Depends(get_db)):
             elif job.status == "failed":
                 status_badge = '<span class="badge badge-critical">failed</span>'
             elif job.status == "running":
-                status_badge = '<span class="badge badge-warning">running</span>'
+                # In-progress is info, not warning - nothing is wrong with a running job.
+                status_badge = '<span class="badge badge-info">running</span>'
             else:
                 status_badge = f'<span class="badge badge-unknown">{_esc(job.status)}</span>'
 

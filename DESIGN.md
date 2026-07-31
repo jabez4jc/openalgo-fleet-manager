@@ -1,5 +1,10 @@
 # OpenAlgo Fleet Manager — Design System
 
+Source of truth: `Design/Fleet Manager Design System.dc.html` (the design doc) → this file
+(the written spec) → `static/style.css` (the implementation) → `static/preview.html` (a live
+gallery of every class, no auth, no data). Change the design doc first, then keep the other
+three in step.
+
 ## Product Context
 
 Multi-server orchestration dashboard for OpenAlgo trading instances. Operations teams monitor server health, manage deployments, and provision new instances across a fleet of trading servers. This is serious infrastructure tooling — needs to communicate reliability, signal density, and operational clarity at a glance.
@@ -24,9 +29,19 @@ Multi-server orchestration dashboard for OpenAlgo trading instances. Operations 
 | Monospace | JetBrains Mono | 400/600 | Developer-friendly, ligatures off, tight line height for logs |
 | Headings | Inter | 600/650 | Same family as UI for consistency |
 
-- Body: 13px (tables), 14px (cards, forms)
-- Small: 11.5px (metadata, labels)
-- Monospace: 11.5px—12px (logs, URLs, keys)
+### Scale
+
+| Size / weight | Used for |
+|---------------|----------|
+| 28 / 650, -.02em | Page title (`.page-intro h1`) |
+| 18 / 600 | Section heading |
+| 14 / 400 | Card and form body copy |
+| 13 / 600 | Card head title (`.card-head h2`) |
+| 13 / 400 | Table row text, button labels |
+| 11.5 / 400 | Metadata, field labels, card subtitles |
+| 11 / 600, .05em caps | Table headers, KPI labels |
+| 26 / 600 tabular | KPI values |
+| mono 11.5—12 | Logs, hosts, ports, versions, timestamps |
 
 ## Color
 
@@ -36,13 +51,18 @@ Multi-server orchestration dashboard for OpenAlgo trading instances. Operations 
 --bg-deep:       #070b14     (page background, deepest)
 --bg:            #0c1123     (card surface)
 --bg-elevated:   #111728     (hovered cards, inputs)
---bg-inset:      #161e33     (inset surfaces, table rows)
+--bg-inset:      #161e33     (default button fill, inset surfaces)
 --border:        #1e2742     (subtle borders)
 --border-hover:  #2a3454     (hover borders)
+--surface-header:#0a0f1e     (sidebar, sticky table headers)
+--row-border:    #141c31     (table row separators — lighter than --border)
 --text-primary:  #e2e8f0     (primary text)
 --text-secondary:#8892b0     (secondary text)
 --text-muted:    #5a6483     (muted text, placeholders)
 ```
+
+The page background is flat `--bg-deep` — no gradient. The login page is the one exception
+and carries a single radial wash, because it has no other content to carry the eye.
 
 ### Accent Palette
 
@@ -50,6 +70,7 @@ Multi-server orchestration dashboard for OpenAlgo trading instances. Operations 
 --accent:        #3b82f6     (primary actions, links — blue)
 --accent-soft:   rgba(59,130,246,.12)
 --accent-glow:   0 0 20px rgba(59,130,246,.25)
+--accent-ink:    #06101f     (text ON the accent fill — see note below)
 
 --success:       #22c55e     (healthy, active)
 --success-soft:  rgba(34,197,94,.12)
@@ -57,9 +78,19 @@ Multi-server orchestration dashboard for OpenAlgo trading instances. Operations 
 --warning-soft:  rgba(234,179,8,.12)
 --danger:        #ef4444     (critical, failed)
 --danger-soft:   rgba(239,68,68,.12)
---info:          #38bdf8     (informational)
+--info:          #38bdf8     (in-progress work)
 --info-soft:     rgba(56,189,248,.12)
+--muted-soft:    rgba(90,100,131,.14)
 ```
+
+Accent buttons use **dark ink** (`--accent-ink`) on the blue fill, not white: white on
+`#3b82f6` measures 3.7:1 and fails AA for body text, `#06101f` on the same fill is 5.2:1.
+
+Measured against `--bg`: text-primary 15.2:1, text-secondary 6.1:1, and every status colour
+between 5.0:1 (danger) and 9.8:1 (warning). `--text-muted` is **3.2:1** and therefore only ever
+carries metadata that is redundant — column labels, timestamps, placeholder text. Never make it
+the sole carrier of information.
+
 
 ### Status → Color Mapping
 
@@ -68,28 +99,25 @@ Multi-server orchestration dashboard for OpenAlgo trading instances. Operations 
 | healthy / active | success | Instance is running normally |
 | warning | warning | Degraded but not failing |
 | critical / failed / inactive | danger | Requires immediate attention |
+| **wedged** | danger | systemd says `active`, the socket answers nothing — the state that produces the user-visible 5xx |
+| **running / restarting / queued job** | info | Work in progress; nothing is wrong |
 | unreachable / gone | text-muted | Server is not responding |
 | unknown | text-secondary | Status not yet determined |
 
+`info` is deliberately not a health state. A job that is running is neither healthy nor
+degraded, and painting it amber trains operators to ignore amber.
+
 ## Spacing
 
-Base unit: 4px
+Base unit 4px, scale `4 · 8 · 12 · 16 · 20 · 24 · 32 · 40`. Applied directly as pixel values,
+not as custom properties — there are no `--space-*` variables in `style.css`.
 
-```
---space-1: 4px
---space-2: 8px
---space-3: 12px
---space-4: 16px
---space-5: 20px
---space-6: 24px
---space-8: 32px
---space-10: 40px
-```
-
-- Card padding: 16px 20px (head), 16px 20px (body)
+- Card padding: 14px 20px (head), 20px (body)
 - Table cells: 10px 14px
 - Button padding: 8px 14px (default), 6px 10px (small)
-- KPI grid gap: 14px
+- Sidebar: 208px wide, 18px 12px padding
+- Topbar: 56px tall, 28px horizontal
+- Grid gaps: 14px (cards, KPIs), 16px (page sections)
 
 ## Border Radius
 
@@ -119,23 +147,31 @@ Base unit: 4px
 
 ### Top Navigation
 
-Sticky bar with brand, nav links, live status indicator, and user menu. Backdrop blur with semi-transparent background.
+56px sticky bar, `rgba(12,17,35,.82)` with a 12px backdrop blur. Left: breadcrumb. Right: live
+poller indicator and user chip. Branding lives in the sidebar, not here — it is not repeated.
 
 ### Side Navigation (desktop)
 
-Collapsible sidebar with grouped navigation. Current section highlighted with accent bar.
+208px fixed sidebar on `--surface-header`, grouped by section label. Current route gets
+`--accent-soft` fill plus a 2px inset accent rail on the left edge. Collapses to icons at
+1100px and to an off-canvas drawer at 768px.
 
 ### Cards
 
-Container for grouped content. Elevated surface with border, radius, shadow. Optional header with title + actions.
+Container for grouped content. Flat `--bg` surface, `--border`, `--radius-md`, `--shadow-md`.
+Header carries the title, an optional subtitle, and either actions or a mono counter on the
+right. **No card nested inside a card.**
 
 ### KPIs
 
-Grid item showing a label and value. Value uses tabular-nums for alignment. Color-coded by status.
+Grid item showing a label, a value, and an optional detail line. Value is 26/600 tabular-nums,
+coloured by status. Label is 11px uppercase muted.
 
 ### Tables
 
-Full-width with sticky header, subtle row hover, mono for data values. Status badges for scannable health indicators.
+Full-width, sticky `--surface-header` header, rows separated by `--row-border` and hovering to
+`--bg-elevated`. Numeric columns take `.num` (right-aligned, mono, tabular-nums) so digits line
+up down the column. Status badges rather than coloured text.
 
 ### Buttons
 
@@ -148,19 +184,28 @@ Full-width with sticky header, subtle row hover, mono for data values. Status ba
 | warning | Cautionary actions (stop) |
 | ghost | Minimal, for dense UIs |
 
-Sizes: default, sm (small only — no large needed)
+Sizes: default (34px, 13px text), sm (30px, 12px text). No large.
+
+Status variants (danger/success/warning) are soft-filled and **keep their colour on hover** —
+the fill deepens from .12 to .2. A destructive button that turns solid red on hover reads as
+"already pressed". Disabled buttons drop to `#0f1526` / `--text-muted` with `not-allowed`.
 
 ### Badges
 
-Inline status indicators. Pill-shaped with soft background and matching text color. Used in tables and detail views.
+Inline status indicators: 11/600 pill, `3px 9px`, soft background, matching text colour, and a
+6px dot of the same colour. Used in tables, cards and detail views.
 
 ### Toasts
 
-Fixed position top-right notification stack. Slides in, auto-dismisses after 4s (errors persist). Icon + message + close button.
+Fixed top-right stack. Each toast carries a 2px left rail in its status colour — that rail is
+what registers peripherally; the icon just confirms it. Slides in over 180ms, auto-dismisses
+after 4s (errors persist). Icon + message + close button.
 
 ### Dialogs
 
-Modal overlay for confirmations and forms. Centered card with backdrop. Focus trap, close on Escape.
+Modal overlay for confirmations and forms. Centred card, `--radius-lg`, `--border-hover`, 20px
+padding, `--shadow-lg`. Title 15/600, body 13/1.55 secondary. Focus trap, close on Escape.
+Confirmation copy names the exact target and the blast radius (see Design Rules).
 
 ### Forms
 
@@ -168,18 +213,39 @@ Cards with stacked label/input pairs. Inputs match elevated surface style. Help 
 
 ### Log Viewer
 
-Monospace, dark inset panel with scrolling log output. Used for job details and provisioning output.
+`--bg-deep` inset panel, `--border`, 8px radius, mono 11.5/1.75. Used for job details and
+provisioning output. Line height is loose on purpose: operators read these under pressure.
+
+## Design Rules
+
+These four override anything else in this document.
+
+1. **Status colour is load-bearing.** Never use success or danger decoratively. A green pill in
+   this product means a live health check returned 200 — not "this looks nice here".
+2. **Mono for machine values.** Hosts, ports, versions, keys, job ids, timestamps and log output
+   are JetBrains Mono. Prose and labels are Inter. Mixing them is how a domain gets mistaken for
+   a sentence.
+3. **Destructive actions confirm.** Reboot, stop and remove open a dialog naming the exact
+   target and the blast radius in instances. Stop also states that the instance stays down
+   across reboots.
+4. **Density over whitespace.** Operators scan 20+ rows at once: 10/14px table cells, 13px rows,
+   no card nested inside a card.
 
 ## Component File Organization
 
-All CSS is in `static/style.css`. No external CSS framework — custom properties power the design system. Component classes follow BEM-like naming with utility overrides where needed.
+All CSS is in `static/style.css`. No external CSS framework — custom properties power the design
+system. Component classes follow BEM-like naming with utility overrides where needed.
+`static/preview.html` renders every class against the real stylesheet; open it after a CSS change
+instead of hunting components across the app.
 
 ## Empty States
 
-When no data exists, show centered message with descriptive text and a CTA link. No illustration needed — keep it utilitarian.
+Centred, utilitarian, no illustration: a `<strong>` headline stating what is missing, one line of
+descriptive text saying what will happen once it exists, and a CTA link.
 
 ## Responsive Behavior
 
-- Desktop (1024px+): Full experience with sidebar
-- Tablet (768-1023px): Collapsed sidebar, reduced padding
-- Mobile (<768px): Single column, stacked KPIs, scrollable tables
+- Desktop (1100px+): Full experience, 208px labelled sidebar
+- Tablet (768–1099px): Sidebar collapses to a 76px icon rail
+- Mobile (<768px): Off-canvas sidebar behind the menu toggle, 2-up KPIs, tables scroll
+  horizontally at a 700px minimum width, toasts span the full width
