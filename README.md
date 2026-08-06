@@ -42,6 +42,29 @@ A background poller queries `/api/health` on every registered server every 60s.
 | `FLEET_ADMIN_BOOTSTRAP_PASSWORD` | No | — |
 | `SCRIPTS_REF` | No | `main` |
 | `POLL_INTERVAL_SECONDS` | No | `60` |
+| `PARTNER_API_KEY` | No | — (unset disables `/api/partner/*`) |
+
+## Partner API
+
+`/api/partner/*` is the only surface reachable without a fleet operator session.
+It exists so the simplifyed.in client area can show customers their own
+instances without holding a copy of every server's admin credentials.
+
+Authenticated by the `X-Fleet-Key` header against `PARTNER_API_KEY`. **Unset
+means closed** — every request is rejected, not accepted.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/partner/instances` | All servers and their instances, from the poller cache. Explicit field whitelist — no URLs, credentials, SSH details or `raw_json`. |
+| `POST` | `/api/partner/restart` | `{server_id, instance, actor}`. Audit-logged as `client:<actor>`. |
+
+Two things this deliberately does not do:
+
+- **It does not authorise anyone.** The key means "you are the website", not
+  "you are a customer". Deciding which client may see or touch which instance
+  is the website's job.
+- **Restart is the only write verb.** Stop, start, update, reboot and
+  provisioning stay operator-only and are unreachable with a partner key.
 
 ## Deployment (Coolify)
 

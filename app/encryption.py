@@ -6,9 +6,23 @@ from threading import Lock
 
 from cryptography.fernet import Fernet
 
-from app.config import FERNET_KEY
+from app.config import FERNET_KEY, PARTNER_API_KEY
 
 _fernet = None
+
+
+def check_partner_key(header_value: str | None) -> bool:
+    """Auth for /api/partner/* — a shared key, not a login session.
+
+    Fails closed: an unset PARTNER_API_KEY rejects every request rather than
+    accepting every request, which is what comparing against "" would do.
+    """
+    if not PARTNER_API_KEY or not header_value:
+        return False
+    # Compared as bytes, not str: compare_digest raises TypeError on a
+    # non-ASCII str, which would turn a garbage header into a 500 instead of
+    # the 401 it deserves. Encoding first makes every input comparable.
+    return hmac.compare_digest(header_value.encode("utf-8"), PARTNER_API_KEY.encode("utf-8"))
 
 
 def _get_fernet():

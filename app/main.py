@@ -12,8 +12,9 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.config import POLL_INTERVAL_SECONDS, SESSION_SECRET
 from app.database import init_db, get_db, async_session_factory
-from app.auth import auth_required, get_session_token, _is_exempt
-from app.routers import auth_router, dashboard_router, servers_router, actions_router, jobs_router, audit_router, provisioning_router
+from app.auth import auth_required, get_session_token, _is_exempt, PARTNER_PREFIX, PARTNER_KEY_HEADER
+from app.encryption import check_partner_key
+from app.routers import auth_router, dashboard_router, servers_router, actions_router, jobs_router, audit_router, provisioning_router, partner_router
 from app.models import FleetUser
 from app.services.poller import poll_all_servers
 
@@ -73,6 +74,14 @@ async def global_auth_middleware(request: Request, call_next):
     if path.startswith("/static/"):
         return await call_next(request)
 
+    # /api/partner/* is called by the simplifyed.in server, which has no browser
+    # session to present. This branch is the only gate on it — the router itself
+    # assumes the key was already checked here.
+    if path.startswith(PARTNER_PREFIX):
+        if check_partner_key(request.headers.get(PARTNER_KEY_HEADER)):
+            return await call_next(request)
+        return JSONResponse(status_code=401, content={"error": "Invalid or missing partner key"})
+
     token = request.cookies.get("fm_session")
     from app.encryption import validate_session
 
@@ -105,3 +114,4 @@ app.include_router(actions_router)
 app.include_router(jobs_router)
 app.include_router(audit_router)
 app.include_router(provisioning_router)
+app.include_router(partner_router)

@@ -13,6 +13,8 @@ from app.encryption import validate_session
 from app.config import FLEET_ADMIN_BOOTSTRAP_PASSWORD
 
 SESSION_COOKIE = "fm_session"
+PARTNER_PREFIX = "/api/partner/"
+PARTNER_KEY_HEADER = "x-fleet-key"
 # /sw.js must be reachable logged-out: the browser fetches it before there is a
 # session, and a redirect to /login there kills the install prompt. It serves a
 # static file and exposes nothing.

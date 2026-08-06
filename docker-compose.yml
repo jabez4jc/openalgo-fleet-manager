@@ -11,6 +11,7 @@ services:
       SCRIPTS_REF: ${SCRIPTS_REF:-main}
       POLL_INTERVAL_SECONDS: ${POLL_INTERVAL_SECONDS:-60}
       ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}
+      PARTNER_API_KEY: ${PARTNER_API_KEY:-}
     restart: unless-stopped
     networks:
       - coolify
