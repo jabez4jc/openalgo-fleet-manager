@@ -11,11 +11,15 @@ wrong here quietly, so both are pinned:
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-os.environ["PARTNER_API_KEY"] = "s3cret-key"
 os.environ.setdefault("FERNET_KEY", "PjRPmYIfRUEZ0Xh9EEgnjLQ0-CvEFDKcNJqZ3Vp2Y5A=")
 
-from app.encryption import check_partner_key
 import app.encryption
+from app.encryption import check_partner_key
+
+# The module constant is patched directly rather than via os.environ: config.py
+# reads the environment once at import, and another test importing app.* first
+# would leave this file asserting against whatever the real environment held.
+app.encryption.PARTNER_API_KEY = "s3cret-key"
 
 # --- the key ---------------------------------------------------------------
 
@@ -24,6 +28,12 @@ assert check_partner_key("wrong") is False
 assert check_partner_key("s3cret-ke") is False    # a prefix is not enough
 assert check_partner_key("") is False
 assert check_partner_key(None) is False           # header absent entirely
+
+# A non-ASCII header must be a plain rejection. compare_digest raises TypeError
+# on non-ASCII str, which would surface as a 500 — an error page in place of an
+# auth failure, and a hint that the endpoint exists.
+assert check_partner_key("s3cret-key☃") is False
+assert check_partner_key("☃") is False
 
 # Unset key: closed, not open. Comparing against "" would do the opposite.
 app.encryption.PARTNER_API_KEY = ""
@@ -70,5 +80,29 @@ for secret in ("ENCRYPTED_SSH_KEY", "ENCRYPTED_ADMIN_PASSWORD", "203.0.113.9",
 # An instance the poller has not named yet must not crash the sort.
 server.instances[0].instance_name = None
 _server_payload(server)
+
+# --- the restart payload ---------------------------------------------------
+
+from app.routers.partner_router import _restart_args
+
+good, err = _restart_args({"server_id": 1, "instance": " fyers ", "actor": " a@b.com "})
+assert err is None and good == {"server_id": 1, "instance": "fyers", "actor": "a@b.com"}
+
+# isinstance(True, int) is True in Python, so a JSON `true` would otherwise be
+# accepted as server_id 1 and restart an instance on a server nobody named.
+for bad in (
+    {"server_id": True, "instance": "fyers", "actor": "a@b.com"},
+    {"server_id": "1", "instance": "fyers", "actor": "a@b.com"},
+    {"server_id": None, "instance": "fyers", "actor": "a@b.com"},
+    {"server_id": 1, "instance": 42, "actor": "a@b.com"},       # non-string
+    {"server_id": 1, "instance": "  ", "actor": "a@b.com"},     # whitespace only
+    {"server_id": 1, "instance": "fyers", "actor": 12345},      # numeric customer id
+    {"server_id": 1, "instance": "fyers"},                      # actor missing
+    ["not", "a", "dict"],
+    None,
+    "string body",
+):
+    args, err = _restart_args(bad)
+    assert args is None and err, f"accepted bad payload: {bad!r}"
 
 print("ok")

@@ -32,6 +32,10 @@ FLEET_ADMIN_BOOTSTRAP_PASSWORD=$BOOTSTRAP_PW
 SCRIPTS_REF=main
 POLL_INTERVAL_SECONDS=60
 ALERT_WEBHOOK_URL=
+# Shared key for /api/partner/* (the simplifyed.in client area). Left empty
+# deliberately: a customer-facing surface should be switched on by a decision,
+# not by running setup. Fill in with: openssl rand -hex 32
+PARTNER_API_KEY=
 EOF
 
 echo ""
