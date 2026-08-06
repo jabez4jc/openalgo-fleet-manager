@@ -6,9 +6,20 @@ from threading import Lock
 
 from cryptography.fernet import Fernet
 
-from app.config import FERNET_KEY
+from app.config import FERNET_KEY, PARTNER_API_KEY
 
 _fernet = None
+
+
+def check_partner_key(header_value: str | None) -> bool:
+    """Auth for /api/partner/* — a shared key, not a login session.
+
+    Fails closed: an unset PARTNER_API_KEY rejects every request rather than
+    accepting every request, which is what comparing against "" would do.
+    """
+    if not PARTNER_API_KEY or not header_value:
+        return False
+    return hmac.compare_digest(header_value, PARTNER_API_KEY)
 
 
 def _get_fernet():
