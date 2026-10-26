@@ -148,3 +148,7 @@ class AdminAPISession:
 
     async def change_password(self, current_password: str, new_password: str) -> dict:
         return await self._request("POST", "/api/change-password", json_data={"current_password": current_password, "new_password": new_password})
+
+    async def get_telemetry(self) -> dict:
+        # The server samples for 1 s to measure rates.
+        return await self._request("GET", "/api/telemetry")

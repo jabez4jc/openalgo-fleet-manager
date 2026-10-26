@@ -299,6 +299,14 @@ async def get_telegram(server_id: int, db: AsyncSession = Depends(get_db)):
     return JSONResponse(await _get_api_for_server(server).get_telegram())
 
 
+@router.get("/{server_id}/telemetry")
+async def get_telemetry(server_id: int, db: AsyncSession = Depends(get_db)):
+    server = await _load_server(db, server_id)
+    if not server:
+        return JSONResponse({"error": "Server not found"}, status_code=404)
+    return JSONResponse(await _get_api_for_server(server).get_telemetry())
+
+
 @router.post("/{server_id}/telegram")
 async def set_telegram(request: Request, server_id: int, db: AsyncSession = Depends(get_db)):
     body = await request.json()

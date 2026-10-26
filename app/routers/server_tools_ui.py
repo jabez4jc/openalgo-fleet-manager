@@ -1,4 +1,4 @@
-"""Server-detail panels for the newer admin API endpoints: read-only terminal,
+"""Server-detail panels for the newer admin API endpoints: system telemetry, read-only terminal,
 Telegram notices, admin password, and the factory-reset form.
 
 Kept out of servers_router.py so that file stays readable. The script relies on
@@ -101,14 +101,55 @@ if(d.status==='success'){closeDialog('pw-dialog');e.target.reset();showToast('Ad
 else showToast('Change password - '+(d.error||d.message||'failed'),'error');
 }
 
+function fmtBytes(n){if(n==null)return '-';const u=['B','KB','MB','GB','TB'];let i=0;while(n>=1024&&i<4){n/=1024;i++;}return n.toFixed(i?1:0)+' '+u[i];}
+function fmtPct(p){return p==null?'-':p.toFixed(1)+'%';}
+function fmtUptime(s){if(s==null)return '-';const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);return (d?d+'d ':'')+h+'h '+m+'m';}
+function esc(s){const d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML;}
+function teleStat(label,value,sub){return '<div class="tele-stat"><div class="tele-label">'+label+'</div><div class="tele-value">'+value+'</div><div class="tele-sub">'+(sub||'')+'</div></div>';}
+async function loadTelemetry(){
+if(document.hidden)return;
+const el=document.getElementById('tele-body');
+const t=await getJson('/telemetry');
+if(t.error){el.innerHTML='<div class="empty-state">Telemetry unavailable: '+esc(t.detail||t.error)+'</div>';return;}
+const c=t.cpu||{},m=t.memory||{},p=t.processes||{},net=(t.network||{}).interfaces||[];
+const rx=net.reduce((a,i)=>a+(i.rx_bps||0),0),tx=net.reduce((a,i)=>a+(i.tx_bps||0),0);
+let h='<div class="tele-grid">'
++teleStat('CPU',fmtPct(c.percent),c.cores+' cores · load '+(c.load||[]).join(' / ')+' · iowait '+fmtPct(c.iowait))
++teleStat('Memory',fmtPct(m.percent),fmtBytes(m.used)+' of '+fmtBytes(m.total)+' · swap '+fmtPct(m.swap_percent))
++(((t.disk||{}).mounts)||[]).map(d=>teleStat('Disk '+esc(d.mount),fmtPct(d.percent),fmtBytes(d.used)+' of '+fmtBytes(d.total))).join('')
++teleStat('Network',fmtBytes(rx)+'/s ↓',fmtBytes(tx)+'/s ↑ · '+((t.network||{}).tcp||{}).inuse+' TCP')
++teleStat('Uptime',fmtUptime(t.uptime_seconds),p.total+' procs · '+p.zombie+' zombie')
++'</div><div class="table-wrap"><table><thead><tr><th>Process</th><th>Unit</th><th>CPU</th><th>Memory</th><th>User</th></tr></thead><tbody>'
++(p.top||[]).slice(0,10).map(r=>'<tr><td class="mono" title="'+esc(r.cmdline)+'">'+esc(r.name)+' <span style="color:var(--text-muted)">'+r.pid+'</span></td><td class="mono">'+esc(r.unit||'-')+'</td><td>'+fmtPct(r.cpu_percent)+'</td><td>'+fmtBytes(r.rss)+'</td><td>'+esc(r.user)+'</td></tr>').join('')
++'</tbody></table></div>';
+el.innerHTML=h;
+document.getElementById('tele-time').textContent='Updated '+new Date().toLocaleTimeString();
+}
+
 terminalActionChanged();
 loadTelegram();
+loadTelemetry();
+setInterval(loadTelemetry,15000);
+document.addEventListener('visibilitychange',loadTelemetry);
 """
 
 
 def server_tools_html(instance_names: list[str]) -> str:
     options = "".join(f'<option value="{_html.escape(n)}">{_html.escape(n)}</option>' for n in instance_names)
     return f"""
+<style>
+.tele-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.tele-stat{border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px}
+.tele-label{font-size:12px;color:var(--text-muted)}
+.tele-value{font-size:22px;font-weight:600;margin:2px 0}
+.tele-sub{font-size:12px;color:var(--text-secondary)}
+</style>
+<div class="card">
+<div class="card-head"><div><h2>System</h2><div class="card-subtitle">Live server telemetry, refreshed every 15 s. <span id="tele-time"></span></div></div>
+<button class="btn btn-sm" onclick="loadTelemetry()">Refresh</button></div>
+<div id="tele-body"><div class="empty-state">Loading...</div></div>
+</div>
+
 <div class="card">
 <div class="card-head"><div><h2>Server Settings</h2><div class="card-subtitle">Admin dashboard settings on this server</div></div></div>
 <div class="action-bar">
