@@ -12,7 +12,7 @@ from app.models import Server, Instance
 from app.encryption import encrypt_value, decrypt_value
 from app.services.audit import write_audit_log
 from app.routers.dashboard_router import BASE_TEMPLATE_START, BASE_TEMPLATE_END
-from app.routers.server_tools_ui import server_tools_html
+from app.routers.server_tools_ui import server_tools_html, TELEMETRY_CARD
 
 router = APIRouter(prefix="/servers", tags=["servers"])
 
@@ -188,7 +188,7 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
 <div class="server-meta-item"><span class="server-meta-label">Last poll</span><span class="mono">{_format_dt(server.last_seen_at, '%Y-%m-%d %H:%M:%S')}</span></div>
 </div>
 </div>
-"""
+{TELEMETRY_CARD}"""
     if not instances:
         html += '<div class="card"><div class="empty-state">No instances found on this server. Poll may not have run yet, or the server has no OpenAlgo instances.</div></div>'
     else:

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -305,6 +305,15 @@ async def get_telemetry(server_id: int, db: AsyncSession = Depends(get_db)):
     if not server:
         return JSONResponse({"error": "Server not found"}, status_code=404)
     return JSONResponse(await _get_api_for_server(server).get_telemetry())
+
+
+@router.get("/{server_id}/telemetry/stream")
+async def stream_telemetry(server_id: int, db: AsyncSession = Depends(get_db)):
+    server = await _load_server(db, server_id)
+    if not server:
+        return JSONResponse({"error": "Server not found"}, status_code=404)
+    return StreamingResponse(_get_api_for_server(server).stream_telemetry(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
 
 @router.post("/{server_id}/telegram")

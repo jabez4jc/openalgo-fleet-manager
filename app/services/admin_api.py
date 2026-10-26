@@ -1,3 +1,4 @@
+import json
 import time
 from dataclasses import dataclass
 from urllib.parse import urljoin
@@ -152,3 +153,21 @@ class AdminAPISession:
     async def get_telemetry(self) -> dict:
         # The server samples for 1 s to measure rates.
         return await self._request("GET", "/api/telemetry")
+
+    async def stream_telemetry(self, interval: int = 2):
+        """Relay the server's telemetry Server-Sent Events as raw bytes."""
+        if not await self._ensure_session():
+            yield b'event: error\ndata: {"error": "admin_api_login_failed"}\n\n'
+            return
+        try:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(30, read=interval + 60), verify=SSL_VERIFY) as client:
+                async with client.stream("GET", urljoin(self.base_url, "/api/telemetry/stream"), params={"interval": interval},
+                                         headers={"Cookie": f"oa_session={self.cookie}"}) as resp:
+                    if resp.status_code != 200:
+                        self.cookie = None  # a stale cookie gets a fresh login on the browser's retry
+                        yield f'event: error\ndata: {{"error": "http_{resp.status_code}"}}\n\n'.encode()
+                        return
+                    async for chunk in resp.aiter_raw():
+                        yield chunk
+        except Exception as e:
+            yield f'event: error\ndata: {json.dumps({"error": "connection_failed", "detail": str(e)})}\n\n'.encode()
