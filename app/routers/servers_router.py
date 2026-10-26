@@ -233,6 +233,7 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
 <button class="btn btn-sm" onclick="actionUpdate({_js_arg(inst.instance_name)})">Update</button>
 <button class="btn btn-sm btn-ghost" onclick="actionInvalidateSession({_js_arg(inst.instance_name)})">Invalidate session</button>
 <button class="btn btn-sm btn-danger" onclick="actionFactoryReset({_js_arg(inst.instance_name)})">Factory reset</button>
+<button class="btn btn-sm btn-danger" onclick="actionDeleteInstance({_js_arg(inst.instance_name)})">Delete</button>
 </div></td>
 </tr>"""
         html += '</tbody></table></div></div>'

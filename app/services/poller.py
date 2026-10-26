@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Server, Instance
+from app.models import Server, Instance, AuditLog
 from app.encryption import decrypt_value
 from app.services.admin_api import AdminAPISession
 from app.config import ALERT_WEBHOOK_URL
@@ -28,6 +28,27 @@ def _health_status_from_health(health_data: dict) -> str:
     if status == "inactive" or status == "failed":
         return "critical"
     return "warning"
+
+
+async def _delete_confirmed(db: AsyncSession, api: AdminAPISession, server_id: int, instance_name: str) -> bool:
+    """True when the newest delete_instance request for this instance is a job
+    the server says succeeded. A missing instance is otherwise "gone" (critical):
+    only a confirmed delete means it vanished on purpose."""
+    result = await db.execute(
+        select(AuditLog)
+        .where(AuditLog.action == "delete_instance", AuditLog.server_id == server_id, AuditLog.instance_name == instance_name)
+        .order_by(AuditLog.id.desc())
+        .limit(1)
+    )
+    entry = result.scalar_one_or_none()
+    job_id = json.loads(entry.detail_json or "{}").get("job_id") if entry else None
+    if not job_id:
+        return False
+    # ponytail: the server keeps jobs in memory, so after its API restarts the
+    # job is unknown and the instance stays "gone" - the safe direction.
+    job = await api.get_job_status(job_id)
+    return (job.get("action") == "delete-instance" and job.get("status") == "success"
+            and (job.get("params") or {}).get("instance") == instance_name)
 
 
 async def poll_server(server: Server, db: AsyncSession):
@@ -94,8 +115,12 @@ async def poll_server(server: Server, db: AsyncSession):
             )
             db.add(new_inst)
 
-    for inst in server.instances:
+    for inst in list(server.instances):
         if inst.instance_name not in seen_names:
+            if await _delete_confirmed(db, api, server.id, inst.instance_name):
+                logger.info("Server %s: %s was deleted on purpose; removing it", server.name, inst.instance_name)
+                server.instances.remove(inst)  # delete-orphan cascade deletes the row
+                continue
             inst.status = "gone"
             inst.health_status = "gone"
             inst.last_polled_at = datetime.now(timezone.utc)

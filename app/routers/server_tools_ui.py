@@ -35,6 +35,12 @@ showActionPanel('Factory reset '+data.instance,{message:'Resetting - this restar
 showActionPanel('Factory reset '+data.instance,await apiCall('/reset-admin-user',data));
 }
 
+async function actionDeleteInstance(inst){
+const typed=prompt('DELETE '+inst+'? The server takes a full backup first (no backup, no delete), then removes the service, files, nginx site and certificate.\n\nType the instance name to confirm.');
+if(typed===null)return;
+if(typed!==inst){showToast('Name did not match - nothing deleted','error');return;}
+showActionPanel('Delete '+inst,await apiCall('/delete-instance',{instance:inst,confirm:typed}));
+}
 async function actionUpdateScripts(){
 if(!confirm('Update the scripts and admin dashboard on this server? Instances are not restarted.'))return;
 showActionPanel('Update Scripts',await apiCall('/update',{scope:'scripts'}));

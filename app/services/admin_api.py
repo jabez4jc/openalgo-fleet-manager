@@ -129,6 +129,10 @@ class AdminAPISession:
         # Synchronous on the server: wipes users, rewrites .env, restarts the instance.
         return await self._request("POST", "/api/reset-admin-user", json_data={"instance": instance, **broker_fields}, timeout=180)
 
+    async def delete_instance(self, instance: str, confirm: str) -> dict:
+        # Queued: the server backs the instance up (no backup, no delete), then removes it.
+        return await self._request("POST", "/api/delete-instance", json_data={"instance": instance, "confirm": confirm})
+
     async def terminal_run(self, fields: dict) -> dict:
         return await self._request("POST", "/api/terminal/run", json_data=fields, timeout=60)
 

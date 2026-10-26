@@ -199,7 +199,29 @@ async def invalidate_session(request: Request, server_id: int, db: AsyncSession 
     return JSONResponse(await _get_api_for_server(server).invalidate_session(instance))
 
 
-RESET_BROKER_FIELDS = ("broker", "broker_api_key", "broker_api_secret", "broker_api_key_market", "broker_api_secret_market")
+@router.post("/{server_id}/delete-instance")
+async def delete_instance(request: Request, server_id: int, db: AsyncSession = Depends(get_db)):
+    body = await request.json()
+    instance = body.get("instance", "")
+    if not instance:
+        return JSONResponse({"error": "Missing instance"}, status_code=400)
+    if body.get("confirm") != instance:
+        return JSONResponse({"error": f'Set "confirm" to the instance name ({instance}) to delete it'}, status_code=400)
+    server = await _load_server(db, server_id)
+    if not server:
+        return JSONResponse({"error": "Server not found"}, status_code=404)
+
+    result = await _get_api_for_server(server).delete_instance(instance, body["confirm"])
+    # Audited after the call: the poller finds the job_id here to confirm the
+    # delete finished before it drops the instance (see poller._delete_confirmed).
+    username = request.session.get("username", "unknown")
+    await write_audit_log(db, actor=username, action="delete_instance", server_id=server_id, instance_name=instance,
+                          detail={"job_id": result.get("job_id"), "error": result.get("error")})
+    await db.commit()
+    return JSONResponse(result)
+
+
+RESET_BROKER_FIELDS =("broker", "broker_api_key", "broker_api_secret", "broker_api_key_market", "broker_api_secret_market")
 
 
 @router.post("/{server_id}/reset-admin-user")
