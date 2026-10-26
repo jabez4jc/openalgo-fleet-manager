@@ -1,4 +1,4 @@
-# OpenAlgo Fleet Manager
+# Simplifyed Fleet Manager
 
 Multi-server orchestration dashboard for OpenAlgo trading instances.
 

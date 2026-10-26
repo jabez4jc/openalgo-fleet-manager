@@ -1,6 +1,6 @@
 {
   "id": "/",
-  "name": "OpenAlgo Fleet Manager",
+  "name": "Simplifyed Fleet Manager",
   "short_name": "Fleet",
   "description": "Operations console for OpenAlgo instances across servers.",
   "start_url": "/",

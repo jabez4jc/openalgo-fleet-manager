@@ -17,7 +17,7 @@ LOGIN_TEMPLATE = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OpenAlgo Fleet Manager - Login</title>
+<title>Simplifyed Fleet Manager - Login</title>
 """ + PWA_HEAD + """
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,10 +27,10 @@ LOGIN_TEMPLATE = """<!DOCTYPE html>
 <body class="login-page">
 <div class="login-card">
 <h1>
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-Fleet Manager
+<img src="/static/logo.png" alt="" width="34" height="34">
+Simplifyed Fleet Manager
 </h1>
-<p class="sub">OpenAlgo Fleet Dashboard</p>
+<p class="sub">Operations console</p>
 {error_html}{info_html}
 <form method="POST" action="/login-submit">
 <div>

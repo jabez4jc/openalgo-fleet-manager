@@ -27,7 +27,7 @@ async def _check_password_change(request: Request, db: AsyncSession):
 PWA_HEAD = """<link rel="manifest" href="/static/manifest.webmanifest">
 <meta name="theme-color" content="#070b14">
 <meta name="mobile-web-app-capable" content="yes">
-<link rel="icon" href="/static/icon-192.png" sizes="192x192">
+<link rel="icon" href="/static/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="/static/icon-192.png">
 <script>
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(console.warn));
@@ -39,7 +39,7 @@ BASE_TEMPLATE_START = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OpenAlgo Fleet Manager</title>
+<title>Simplifyed Fleet Manager</title>
 """ + PWA_HEAD + """
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,8 +52,8 @@ BASE_TEMPLATE_START = """<!DOCTYPE html>
 <div class="app-shell">
 <aside class="sidebar" id="sidebar">
 <div class="brand">
-<div class="brand-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M12 5v14"/></svg></div>
-<div><b>OpenAlgo Fleet</b><small>Operations console</small></div>
+<img class="brand-logo" src="/static/logo.png" alt="" width="30" height="30">
+<div><b>Simplifyed</b><small>Fleet Manager</small></div>
 </div>
 <div class="sidebar-section-label">Operate</div>
 <nav class="sidebar-nav" aria-label="Primary navigation">
@@ -73,7 +73,7 @@ BASE_TEMPLATE_START = """<!DOCTYPE html>
 <header class="topbar">
 <div class="topbar-left">
 <button class="menu-toggle" type="button" aria-label="Open navigation" onclick="document.body.classList.toggle('sidebar-open')">☰</button>
-<div class="breadcrumb"><span>OpenAlgo</span><strong>Fleet Manager</strong></div>
+<div class="breadcrumb"><span>Simplifyed</span><strong>Fleet Manager</strong></div>
 </div>
 <div class="topbar-right">
 <span class="live"><span class="dot pulse"></span><span id="last-updated">Poller live</span></span>
@@ -213,7 +213,7 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
     html = BASE_TEMPLATE_START
     html += f"""
 <div class="page-intro">
-<div><div class="eyebrow">OpenAlgo fleet</div><h1>Fleet overview</h1><p>{len(servers)} servers · {total_instances} instances · live health monitoring</p></div>
+<div><div class="eyebrow">Simplifyed fleet</div><h1>Fleet overview</h1><p>{len(servers)} servers · {total_instances} instances · live health monitoring</p></div>
 <div class="page-actions"><a href="/servers/add" class="btn btn-accent">Add server</a><button class="btn btn-ghost" onclick="location.reload()">Refresh data</button></div>
 </div>
 """
@@ -273,4 +273,4 @@ async def dashboard(request: Request, db: AsyncSession = Depends(get_db)):
 
 @router.get("/health", response_class=HTMLResponse)
 async def health():
-    return HTMLResponse(content='{"status":"healthy","service":"OpenAlgo Fleet Manager"}', media_type="application/json")
+    return HTMLResponse(content='{"status":"healthy","service":"Simplifyed Fleet Manager"}', media_type="application/json")

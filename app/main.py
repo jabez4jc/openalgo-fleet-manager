@@ -57,7 +57,7 @@ async def scheduled_poll():
         await poll_all_servers(db)
 
 
-app = FastAPI(title="OpenAlgo Fleet Manager", lifespan=lifespan)
+app = FastAPI(title="Simplifyed Fleet Manager", lifespan=lifespan)
 
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET, session_cookie="fm_session_data", max_age=12 * 3600, same_site="lax", https_only=False)
 

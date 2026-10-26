@@ -1,4 +1,4 @@
-# OpenAlgo Fleet Manager — Design System
+# Simplifyed Fleet Manager — Design System
 
 Source of truth: `Design/Fleet Manager Design System.dc.html` (the design doc) → this file
 (the written spec) → `static/style.css` (the implementation) → `static/preview.html` (a live

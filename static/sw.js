@@ -4,12 +4,13 @@
 // and job output, so nothing but /static/ ever goes into the cache. Pages and
 // /api/* are network-only; offline just gets a "you're offline" page.
 // Bump CACHE when the shell files change.
-const CACHE = 'fleet-static-v2';
+const CACHE = 'fleet-static-v4';
 const SHELL = [
   '/static/offline.html',
   '/static/style.css',
   '/static/icon-192.png',
   '/static/icon-512.png',
+  '/static/favicon.png',
 ];
 
 self.addEventListener('install', (event) => {

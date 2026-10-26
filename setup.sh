@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$SCRIPT_DIR/.env"
 
-echo "=== OpenAlgo Fleet Manager Setup ==="
+echo "=== Simplifyed Fleet Manager Setup ==="
 echo ""
 
 if [[ -f "$ENV_FILE" ]]; then
