@@ -18,6 +18,27 @@ catch(e){return{error:e.message};}
 }
 function formData(form){return Object.fromEntries(new FormData(form).entries());}
 
+// Typed-name confirmation with a Copy button; resolves true only on an exact match.
+let confirmDone=null;
+function confirmByName(title,message,name,action){
+document.getElementById('cbn-title').textContent=title;
+document.getElementById('cbn-message').textContent=message;
+document.getElementById('cbn-name').textContent=name;
+document.getElementById('cbn-submit').textContent=action;
+const input=document.getElementById('cbn-input');
+input.value='';input.dataset.name=name;cbnInput();
+openDialog('cbn-dialog');input.focus();
+return new Promise(r=>{confirmDone=r;});
+}
+function cbnInput(){const i=document.getElementById('cbn-input');document.getElementById('cbn-submit').disabled=i.value!==i.dataset.name;}
+function cbnClose(ok){closeDialog('cbn-dialog');if(confirmDone){confirmDone(ok);confirmDone=null;}}
+async function cbnCopy(){
+const name=document.getElementById('cbn-name').textContent;
+try{await navigator.clipboard.writeText(name);}
+catch(e){const r=document.createRange();r.selectNodeContents(document.getElementById('cbn-name'));getSelection().removeAllRanges();getSelection().addRange(r);document.execCommand('copy');}
+const b=document.getElementById('cbn-copy');b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1500);
+}
+
 async function actionInvalidateSession(inst){
 if(!confirm('Revoke the broker session of '+inst+'? The client must log in to the broker again before trading.'))return;
 showActionPanel('Invalidate session '+inst,await apiCall('/invalidate-session',{instance:inst}));
@@ -31,19 +52,24 @@ openDialog('reset-dialog');
 async function submitFactoryReset(e){
 e.preventDefault();
 const data=formData(e.target);
-if(prompt('This deletes every user and broker login of '+data.instance+'. Type the instance name to confirm.')!==data.instance)return;
+if(!await confirmByName('Factory reset '+data.instance,'This deletes every user and broker login of the instance and restarts it.',data.instance,'Factory reset'))return;
 closeDialog('reset-dialog');
 showActionPanel('Factory reset '+data.instance,{message:'Resetting - this restarts the instance...'});
 showActionPanel('Factory reset '+data.instance,await apiCall('/reset-admin-user',data));
 }
 
 async function actionDeleteInstance(inst){
-const typed=prompt('DELETE '+inst+'? The server takes a full backup first (no backup, no delete), then removes the service, files, nginx site and certificate.\n\nType the instance name to confirm.');
-if(typed===null)return;
-if(typed!==inst){showToast('Name did not match - nothing deleted','error');return;}
-const d=await apiCall('/delete-instance',{instance:inst,confirm:typed});
+if(!await confirmByName('Delete '+inst,'The server takes a full backup first (no backup, no delete), then removes the service, files, nginx site and certificate.',inst,'Delete instance'))return;
+const d=await apiCall('/delete-instance',{instance:inst,confirm:inst});
 showActionPanel('Delete '+inst,d);
 if(d.removed)setTimeout(()=>location.reload(),1500);
+}
+async function actionRemoveServer(){
+const name=document.getElementById('server-name').dataset.name;
+if(!await confirmByName('Remove '+name,'Removes the server and all its instances from the fleet manager. Nothing changes on the server itself - its instances keep running, and you can add it again later.',name,'Remove server'))return;
+const d=await apiCall('/remove',{confirm:name});
+if(d.status==='success'){showToast(d.message,'success');setTimeout(()=>location.href='/servers',1000);}
+else showToast('Remove server - '+(d.error||'failed'),'error');
 }
 async function actionUpdateScripts(){
 if(!confirm('Update the scripts and admin dashboard on this server? Instances are not restarted.'))return;
@@ -108,15 +134,16 @@ loadTelegram();
 """
 
 
-def server_tools_html(instance_names: list[str]) -> str:
+def server_tools_html(server_name: str, instance_names: list[str]) -> str:
     options = "".join(f'<option value="{_html.escape(n)}">{_html.escape(n)}</option>' for n in instance_names)
     return f"""
-<div class="card">
+<div class="card" id="server-name" data-name="{_html.escape(server_name)}">
 <div class="card-head"><div><h2>Server Settings</h2><div class="card-subtitle">Admin dashboard settings on this server</div></div></div>
 <div class="action-bar">
 <span>Telegram notices <span id="tg-status" class="badge badge-unknown">...</span></span>
 <button class="btn btn-sm" onclick="openDialog('tg-dialog')">Set Telegram bot</button>
 <button class="btn btn-sm" onclick="openDialog('pw-dialog')">Change admin password</button>
+<button class="btn btn-sm btn-danger" onclick="actionRemoveServer()">Remove server</button>
 </div>
 </div>
 
@@ -178,6 +205,20 @@ def server_tools_html(instance_names: list[str]) -> str:
 <label>New password</label><input name="new_password" type="password" minlength="8" autocomplete="new-password" required>
 <label>Confirm new password</label><input name="confirm_password" type="password" minlength="8" autocomplete="new-password" required>
 <div class="dialog-actions"><button type="button" class="btn btn-sm" onclick="closeDialog('pw-dialog')">Cancel</button><button type="submit" class="btn btn-sm btn-accent">Change password</button></div>
+</form>
+</div>
+
+<div class="dialog-overlay hidden" id="cbn-dialog">
+<form class="dialog" onsubmit="event.preventDefault();cbnClose(true)">
+<h2 id="cbn-title"></h2>
+<p class="help-text" id="cbn-message"></p>
+<label>Type <b>exactly</b> this name to confirm</label>
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+<code id="cbn-name" class="mono" style="flex:1;padding:8px 10px;border:1px dashed var(--border);border-radius:var(--radius-sm);user-select:all;overflow-wrap:anywhere"></code>
+<button type="button" class="btn btn-sm" id="cbn-copy" onclick="cbnCopy()">Copy</button>
+</div>
+<input id="cbn-input" autocomplete="off" spellcheck="false" placeholder="Paste or type the name" oninput="cbnInput()" onkeydown="if(event.key==='Escape')cbnClose(false)">
+<div class="dialog-actions"><button type="button" class="btn btn-sm" onclick="cbnClose(false)">Cancel</button><button type="submit" class="btn btn-sm btn-danger" id="cbn-submit" disabled></button></div>
 </form>
 </div>
 

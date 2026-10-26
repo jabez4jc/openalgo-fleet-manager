@@ -5,7 +5,7 @@ Two server actions can quietly do damage, so both are pinned:
   must store the new one exactly when the server accepts it - never otherwise.
 - factory reset: blank broker fields must not reach the server (they would
   overwrite keys), and broker secrets must never land in the audit log.
-- delete: nothing reaches the server without a matching confirm, and the poller
+- delete / remove server: nothing happens without a matching confirm, and the poller
   drops a vanished instance only when the server says its delete job succeeded
   - anything else must stay visible as "gone".
 """
@@ -124,4 +124,14 @@ assert not check({"error": "Job not found"})                    # server API res
 assert not check(ok_job, name="openalgo2")                      # job was for another instance
 assert not check(ok_job, entry=None)                            # never deleted from here
 assert not check(ok_job, entry=types.SimpleNamespace(detail_json='{"job_id": null, "error": "x"}'))
+
+# Remove server: only with the exact name; the audit keeps what was removed.
+server = FakeServer()
+server.name, server.instances = "Jz Bluehost", [types.SimpleNamespace(instance_name="openalgo1")]
+db = FakeDB(server)
+assert "error" in run(actions_router.remove_server(FakeRequest({"confirm": "jz bluehost"}), 1, db))
+assert db.deleted == [] and db.added == []
+assert run(actions_router.remove_server(FakeRequest({"confirm": "Jz Bluehost"}), 1, db))["status"] == "success"
+assert db.deleted == [server]
+assert json.loads(db.added[0].detail_json)["instances"] == ["openalgo1"]
 print("ok")

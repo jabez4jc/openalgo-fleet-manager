@@ -406,7 +406,7 @@ if(d.status==='running'||d.status==='queued')setTimeout(()=>pollProvJob(jobId,sh
 }}
 </script>
 """
-    html += server_tools_html([inst.instance_name for inst in instances])
+    html += server_tools_html(server.name, [inst.instance_name for inst in instances])
     html += BASE_TEMPLATE_END
     return HTMLResponse(content=html)
 

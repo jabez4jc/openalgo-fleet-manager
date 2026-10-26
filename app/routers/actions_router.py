@@ -237,6 +237,25 @@ async def delete_instance(request: Request, server_id: int, db: AsyncSession = D
     return JSONResponse(result)
 
 
+@router.post("/{server_id}/remove")
+async def remove_server(request: Request, server_id: int, db: AsyncSession = Depends(get_db)):
+    """Forget a server and its instances in the fleet manager. Nothing on the
+    server itself changes - its instances keep running."""
+    body = await request.json()
+    server = await _load_server(db, server_id)
+    if not server:
+        return JSONResponse({"error": "Server not found"}, status_code=404)
+    if body.get("confirm") != server.name:
+        return JSONResponse({"error": f'Set "confirm" to the server name ({server.name}) to remove it'}, status_code=400)
+
+    instances = [i.instance_name for i in server.instances]
+    await db.delete(server)  # cascades to its instances and provisioning jobs
+    await write_audit_log(db, actor=request.session.get("username", "unknown"), action="remove_server", server_id=server_id,
+                          detail={"name": server.name, "base_url": server.base_url, "instances": instances})
+    await db.commit()
+    return JSONResponse({"status": "success", "message": f"Removed {server.name} and {len(instances)} instance(s) from the fleet manager"})
+
+
 RESET_BROKER_FIELDS =("broker", "broker_api_key", "broker_api_secret", "broker_api_key_market", "broker_api_secret_market")
 
 
