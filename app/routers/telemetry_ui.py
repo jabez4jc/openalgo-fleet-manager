@@ -63,18 +63,24 @@ document.getElementById('tele-status').textContent='Unavailable';
 document.getElementById('tele-body').innerHTML='<div class="empty-state">Telemetry unavailable: '+teleEsc(msg)+'</div>';
 }
 // Live stream first; if it never delivers, fall back to a snapshot every 15 s.
-let teleLive=false,telePolling=null;
+// Nothing runs while the tab is hidden: the server samples only for an open stream.
+let teleSrc=null,teleLive=false,telePolling=null;
 async function pollTelemetry(){
-if(document.hidden)return;
 const t=await getJson('/telemetry');
 if(t.error)teleError(t.detail||t.error);else renderTelemetry(t,'Updated '+new Date().toLocaleTimeString()+' · every 15s');
 }
-function startTelemetry(){
-if(typeof EventSource==='undefined'){pollTelemetry();telePolling=setInterval(pollTelemetry,15000);return;}
-const src=new EventSource('/api/servers/'+serverId+'/telemetry/stream');
-src.onmessage=e=>{teleLive=true;const t=JSON.parse(e.data);renderTelemetry(t,'Live · every '+(t.interval||'?')+'s');};
-const fallBack=()=>{src.close();if(!telePolling){pollTelemetry();telePolling=setInterval(pollTelemetry,15000);}};
-src.addEventListener('error',e=>{if(!teleLive||e.data)fallBack();});
+function startPolling(){if(!telePolling){pollTelemetry();telePolling=setInterval(pollTelemetry,15000);}}
+function stopTelemetry(){
+if(teleSrc){teleSrc.close();teleSrc=null;}
+clearInterval(telePolling);telePolling=null;teleLive=false;
+document.getElementById('tele-status').textContent='Paused while the tab is hidden';
 }
-startTelemetry();
+function startTelemetry(){
+if(typeof EventSource==='undefined'){startPolling();return;}
+const src=teleSrc=new EventSource('/api/servers/'+serverId+'/telemetry/stream');
+src.onmessage=e=>{teleLive=true;const t=JSON.parse(e.data);renderTelemetry(t,'Live · every '+(t.interval||'?')+'s');};
+src.addEventListener('error',e=>{if(!teleLive||e.data){src.close();teleSrc=null;startPolling();}});
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stopTelemetry();else if(!teleSrc&&!telePolling)startTelemetry();});
+if(!document.hidden)startTelemetry();
 """
