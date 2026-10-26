@@ -1,14 +1,66 @@
+import base64
 import io
 import logging
 import time
 from datetime import datetime, timezone
 
 import paramiko
+from cryptography.exceptions import UnsupportedAlgorithm
+from cryptography.hazmat.primitives import serialization
 
 from app.config import SCRIPTS_REPO_URL, SCRIPTS_REPO_PATH, SCRIPTS_REF
 from app.encryption import decrypt_value
 
 logger = logging.getLogger("fleetmgr.ssh")
+
+
+def unlock_private_key(key_text: str, passphrase: str = "") -> str:
+    """Any OpenSSH or PEM private key (RSA, ed25519, ECDSA), unlocked with its
+    passphrase, as an unencrypted OpenSSH key. Stored keys are already encrypted
+    at rest, and jobs run unattended, so the passphrase is not kept.
+    Raises ValueError with a message fit for the form."""
+    data, password = key_text.strip().encode(), passphrase.encode() or None
+    load = serialization.load_ssh_private_key if b"OPENSSH PRIVATE KEY" in data else serialization.load_pem_private_key
+    try:
+        key = load(data, password)
+    except TypeError as e:  # passphrase missing, or given for a key that has none
+        if password is None:
+            raise ValueError("This SSH key has a passphrase - enter it in the SSH Key Passphrase field") from e
+        key = load(data, None)
+    except (ValueError, UnsupportedAlgorithm) as e:
+        if password:
+            raise ValueError("The SSH key passphrase is wrong (or the key is damaged)") from e
+        raise ValueError("Not a valid SSH private key - paste the whole file, including the BEGIN/END lines") from e
+    return key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.OpenSSH,
+                             serialization.NoEncryption()).decode()
+
+
+def parse_host_keys(text: str) -> list[tuple[str, paramiko.PKey]]:
+    """Host keys from ssh-keyscan output or .pub lines ("[host] type base64 [comment]").
+    Raises ValueError when no line holds a usable key."""
+    keys = []
+    for line in (text or "").splitlines():
+        parts = line.split()
+        if not parts or parts[0].startswith("#"):
+            continue
+        if len(parts) > 2 and not parts[0].startswith(("ssh-", "ecdsa-", "sk-")):
+            parts = parts[1:]  # drop the hostname ssh-keyscan puts first
+        try:
+            keys.append((parts[0], paramiko.PKey.from_type_string(parts[0], base64.b64decode(parts[1]))))
+        except Exception:
+            continue
+    if not keys:
+        raise ValueError('Host key not recognised - paste a line of `ssh-keyscan <host>` output, e.g. "host ssh-ed25519 AAAA..."')
+    return keys
+
+
+def check_ssh_fields(key_text: str, passphrase: str, host_key: str) -> tuple[str | None, str | None]:
+    """Form input -> (unlocked key or None, host key text or None); ValueError on bad input."""
+    pem = unlock_private_key(key_text, passphrase) if key_text.strip() else None
+    host_key = host_key.strip() or None
+    if host_key:
+        parse_host_keys(host_key)
+    return pem, host_key
 
 
 class SSHClient:
@@ -21,13 +73,25 @@ class SSHClient:
         self._client: paramiko.SSHClient | None = None
 
     def connect(self):
-        key_file = io.StringIO(self.private_key_pem)
-        pkey = paramiko.RSAKey.from_private_key(key_file)
+        # Keys saved before unlock_private_key existed may be RSA PEM or passphrase-protected.
+        try:
+            pem = unlock_private_key(self.private_key_pem)
+        except ValueError as e:
+            raise ValueError(f"{e}. Re-enter the key on the server's Edit page.") from e
+        for key_class in (paramiko.Ed25519Key, paramiko.ECDSAKey, paramiko.RSAKey):
+            try:
+                pkey = key_class.from_private_key(io.StringIO(pem))
+                break
+            except paramiko.SSHException:
+                continue
+        else:
+            raise ValueError("Unsupported SSH key type - use an ed25519, ECDSA or RSA key")
 
         self._client = paramiko.SSHClient()
         if self.host_key:
-            key_type, key_data = self.host_key.split(" ", 1)
-            self._client.get_host_keys().add(self.host, key_type, paramiko.PKey.from_type_string(key_type, key_data.encode()))
+            name = self.host if self.port == 22 else f"[{self.host}]:{self.port}"
+            for key_type, key in parse_host_keys(self.host_key):
+                self._client.get_host_keys().add(name, key_type, key)
         else:
             self._client.set_missing_host_key_policy(paramiko.RejectPolicy())
 

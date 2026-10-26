@@ -1,6 +1,3 @@
-import json
-import html as _html
-
 from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,31 +10,18 @@ from app.encryption import encrypt_value, decrypt_value
 from app.services.audit import write_audit_log
 from app.routers.dashboard_router import BASE_TEMPLATE_START, BASE_TEMPLATE_END
 from app.routers.server_tools_ui import server_tools_html, TELEMETRY_CARD
+from app.routers.html_utils import _esc, _js_arg, _url_link, _format_dt
+from app.services.ssh_client import check_ssh_fields
 
 router = APIRouter(prefix="/servers", tags=["servers"])
 
-
-def _esc(value: object, quote: bool = True) -> str:
-    return _html.escape(str(value or ""), quote=quote)
-
-
-def _js_arg(value: str | None) -> str:
-    """Encode a string for a quoted inline handler without breaking the page."""
-    return _esc(json.dumps(value or ""), quote=True)
+PASSPHRASE_FIELD = """<label class="reset-field-label">SSH Key Passphrase <span style="color:var(--text-muted)">(only if the key has one; used once to unlock it, never stored)</span></label>
+<input class="reset-input" type="password" name="ssh_key_passphrase" autocomplete="off">"""
 
 
-def _url_link(url: str | None) -> str:
-    """The server's URL as a new-tab link; plain text unless it is http(s)."""
-    if not (url or "").lower().startswith(("http://", "https://")):
-        return _esc(url)
-    return f'<a href="{_esc(url)}" target="_blank" rel="noopener noreferrer">{_esc(url)}</a>'
-
-
-def _format_dt(value: object, fmt: str, fallback: str = "never") -> str:
-    if not value:
-        return fallback
-    formatter = getattr(value, "strftime", None)
-    return formatter(fmt) if formatter else _esc(value)
+def _form_error(message: str) -> HTMLResponse:
+    body = f'<div class="card"><div class="card-head"><h2>Could not save the server</h2></div><div style="padding:16px 20px"><p>{_esc(message)}</p><button class="btn" onclick="history.back()">Go back and fix it</button></div></div>'
+    return HTMLResponse(BASE_TEMPLATE_START + body + BASE_TEMPLATE_END, status_code=400)
 
 
 @router.get("", response_class=HTMLResponse)
@@ -104,6 +88,7 @@ async def add_server_form(request: Request, db: AsyncSession = Depends(get_db)):
 <input class="reset-input" type="text" name="ssh_user" placeholder="ubuntu">
 <label class="reset-field-label">SSH Private Key <span style="color:var(--text-muted)">(paste full key)</span></label>
 <textarea name="ssh_key" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----" class="mono" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:12px;min-height:120px;resize:vertical"></textarea>
+""" + PASSPHRASE_FIELD + """
 <label class="reset-field-label">SSH Host Key <span style="color:var(--text-muted)">(ssh-keyscan output, for pinning)</span></label>
 <textarea name="ssh_host_key" placeholder="server.example.com ssh-rsa AAAAB3..." class="mono" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:12px;min-height:60px;resize:vertical"></textarea>
 <label class="reset-field-label">Notes</label>
@@ -130,11 +115,16 @@ async def add_server_submit(
     ssh_port: int = Form(22),
     ssh_user: str = Form(""),
     ssh_key: str = Form(""),
+    ssh_key_passphrase: str = Form(""),
     ssh_host_key: str = Form(""),
     notes: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
     username = request.session.get("username", "unknown")
+    try:
+        ssh_key_pem, ssh_host_key = check_ssh_fields(ssh_key, ssh_key_passphrase, ssh_host_key)
+    except ValueError as e:
+        return _form_error(str(e))
 
     server = Server(
         name=name,
@@ -142,8 +132,8 @@ async def add_server_submit(
         ssh_host=ssh_host or None,
         ssh_port=ssh_port,
         ssh_user=ssh_user or None,
-        ssh_key_encrypted=encrypt_value(ssh_key) if ssh_key.strip() else None,
-        ssh_host_key=ssh_host_key.strip() or None,
+        ssh_key_encrypted=encrypt_value(ssh_key_pem) if ssh_key_pem else None,
+        ssh_host_key=ssh_host_key,
         admin_username=admin_username,
         admin_password_encrypted=encrypt_value(admin_password),
         notes=notes or None,
@@ -441,6 +431,7 @@ async def edit_server_form(request: Request, server_id: int, db: AsyncSession = 
 <input class="reset-input" type="text" name="ssh_user" value="{_esc(server.ssh_user)}">
 <label class="reset-field-label">SSH Private Key <span style="color:var(--text-muted)">(leave blank to keep current)</span></label>
 <textarea name="ssh_key" placeholder="Leave blank to keep current" class="mono" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:12px;min-height:60px;resize:vertical"></textarea>
+{PASSPHRASE_FIELD}
 <label class="reset-field-label">SSH Host Key <span style="color:var(--text-muted)">(leave blank to keep current)</span></label>
 <textarea name="ssh_host_key" placeholder="Leave blank to keep current" class="mono" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:12px;min-height:60px;resize:vertical"></textarea>
 <label class="reset-field-label">Notes</label>
@@ -468,6 +459,7 @@ async def edit_server_submit(
     ssh_port: int = Form(22),
     ssh_user: str = Form(""),
     ssh_key: str = Form(""),
+    ssh_key_passphrase: str = Form(""),
     ssh_host_key: str = Form(""),
     notes: str = Form(""),
     db: AsyncSession = Depends(get_db),
@@ -476,6 +468,10 @@ async def edit_server_submit(
     server = result.scalar_one_or_none()
     if not server:
         return RedirectResponse(url="/servers", status_code=302)
+    try:
+        ssh_key_pem, ssh_host_key = check_ssh_fields(ssh_key, ssh_key_passphrase, ssh_host_key)
+    except ValueError as e:
+        return _form_error(str(e))
 
     username = request.session.get("username", "unknown")
 
@@ -487,10 +483,10 @@ async def edit_server_submit(
     server.ssh_host = ssh_host or None
     server.ssh_port = ssh_port
     server.ssh_user = ssh_user or None
-    if ssh_key.strip():
-        server.ssh_key_encrypted = encrypt_value(ssh_key.strip())
-    if ssh_host_key.strip():
-        server.ssh_host_key = ssh_host_key.strip()
+    if ssh_key_pem:
+        server.ssh_key_encrypted = encrypt_value(ssh_key_pem)
+    if ssh_host_key:
+        server.ssh_host_key = ssh_host_key
     server.notes = notes or None
     await db.commit()
 

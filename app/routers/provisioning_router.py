@@ -14,7 +14,7 @@ from app.database import get_db
 from app.models import Server, ProvisioningJob
 from app.encryption import decrypt_value, encrypt_value
 from app.config import SCRIPTS_REPO_PATH, SCRIPTS_REPO_URL, SCRIPTS_REF
-from app.services.ssh_client import SSHClient
+from app.services.ssh_client import SSHClient, check_ssh_fields
 from app.services.audit import write_audit_log
 from app.routers.dashboard_router import BASE_TEMPLATE_START, BASE_TEMPLATE_END
 
@@ -105,9 +105,11 @@ async def provisioning_page(request: Request, db: AsyncSession = Depends(get_db)
 <label class="reset-field-label">SSH User</label>
 <input class="reset-input" type="text" name="ssh_user" id="prov-ssh-user" value="ubuntu">
 <label class="reset-field-label">SSH Private Key</label>
-<textarea name="ssh_key" id="prov-ssh-key" rows="5" placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;..." class="mono" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:12px;resize:vertical"></textarea>
-<label class="reset-field-label">Host Public Key <span style="color:var(--text-muted)">(optional, pin for security)</span></label>
-<input type="text" name="host_key" id="prov-host-key" placeholder="ssh-ed25519 AAAAC3... or leave blank to auto-accept" class="reset-input mono">
+<textarea name="ssh_key" id="prov-ssh-key" rows="5" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;..." class="mono" style="width:100%;padding:8px 10px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text-primary);font-size:12px;resize:vertical"></textarea>
+<label class="reset-field-label">SSH Key Passphrase <span style="color:var(--text-muted)">(only if the key has one; never stored)</span></label>
+<input class="reset-input" type="password" name="ssh_key_passphrase" autocomplete="off">
+<label class="reset-field-label">SSH Host Key <span style="color:var(--text-muted)">(run <code>ssh-keyscan &lt;host&gt;</code> and paste the output)</span></label>
+<textarea name="host_key" id="prov-host-key" rows="3" placeholder="192.168.1.100 ssh-ed25519 AAAAC3..." class="reset-input mono"></textarea>
 </div>
 </div>
 <div style="margin-top:4px;padding:12px;background:var(--danger-soft);border:1px solid rgba(239,68,68,.3);border-radius:var(--radius-sm);font-size:13px;color:var(--danger)">
@@ -208,11 +210,12 @@ async def submit_provision(request: Request, db: AsyncSession = Depends(get_db))
         except (TypeError, ValueError):
             return JSONResponse({"error": "SSH port must be a number"}, status_code=400)
         ssh_user = body.get("ssh_user", "").strip()
-        ssh_key_pem = body.get("ssh_key", "").strip()
-        host_key = body.get("host_key", "").strip() or None
-
-        if not server_name or not ssh_host or not ssh_user or not ssh_key_pem:
-            return JSONResponse({"error": "Server name, SSH host, user, and private key are required"}, status_code=400)
+        if not server_name or not ssh_host or not ssh_user or not body.get("ssh_key", "").strip() or not body.get("host_key", "").strip():
+            return JSONResponse({"error": "Server name, SSH host, user, private key and host key are required"}, status_code=400)
+        try:
+            ssh_key_pem, host_key = check_ssh_fields(body.get("ssh_key", ""), body.get("ssh_key_passphrase", ""), body.get("host_key", ""))
+        except ValueError as e:
+            return JSONResponse({"error": str(e)}, status_code=400)
 
         base_url = f"https://{domain}:8888"
 
@@ -255,8 +258,8 @@ async def submit_provision(request: Request, db: AsyncSession = Depends(get_db))
     server = result.scalar_one_or_none()
     if not server:
         return JSONResponse({"error": "Server not found"}, status_code=404)
-    if not server.ssh_host or not server.ssh_key_encrypted:
-        return JSONResponse({"error": "Server has no SSH credentials"}, status_code=400)
+    if not server.ssh_host or not server.ssh_key_encrypted or not server.ssh_host_key:
+        return JSONResponse({"error": "Server needs SSH host, key and host key - add them under Edit"}, status_code=400)
 
     job = ProvisioningJob(
         server_id=server_id,
@@ -472,8 +475,8 @@ async def run_backup(request: Request, server_id: int, db: AsyncSession = Depend
     server = result.scalar_one_or_none()
     if not server:
         return JSONResponse({"error": "Server not found"}, status_code=404)
-    if not server.ssh_host or not server.ssh_key_encrypted:
-        return JSONResponse({"error": "Server has no SSH credentials"}, status_code=400)
+    if not server.ssh_host or not server.ssh_key_encrypted or not server.ssh_host_key:
+        return JSONResponse({"error": "Server needs SSH host, key and host key - add them under Edit"}, status_code=400)
 
     username = request.session.get("username", "unknown")
     job = ProvisioningJob(server_id=server_id, job_type="backup", status="queued", triggered_by=username)
@@ -494,8 +497,8 @@ async def run_patch_self_test(request: Request, server_id: int, db: AsyncSession
     server = result.scalar_one_or_none()
     if not server:
         return JSONResponse({"error": "Server not found"}, status_code=404)
-    if not server.ssh_host or not server.ssh_key_encrypted:
-        return JSONResponse({"error": "Server has no SSH credentials"}, status_code=400)
+    if not server.ssh_host or not server.ssh_key_encrypted or not server.ssh_host_key:
+        return JSONResponse({"error": "Server needs SSH host, key and host key - add them under Edit"}, status_code=400)
 
     username = request.session.get("username", "unknown")
     job = ProvisioningJob(server_id=server_id, job_type="patch_self_test", status="queued", triggered_by=username)
@@ -516,8 +519,8 @@ async def get_backup_list(request: Request, server_id: int, db: AsyncSession = D
     server = result.scalar_one_or_none()
     if not server:
         return JSONResponse({"error": "Server not found"}, status_code=404)
-    if not server.ssh_host or not server.ssh_key_encrypted:
-        return JSONResponse({"error": "Server has no SSH credentials"}, status_code=400)
+    if not server.ssh_host or not server.ssh_key_encrypted or not server.ssh_host_key:
+        return JSONResponse({"error": "Server needs SSH host, key and host key - add them under Edit"}, status_code=400)
 
     username = request.session.get("username", "unknown")
     job = ProvisioningJob(server_id=server_id, job_type="backup_list", status="queued", triggered_by=username)
