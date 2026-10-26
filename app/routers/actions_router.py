@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.database import get_db
-from app.models import Server
+from app.models import Server, Instance
 from app.encryption import encrypt_value, decrypt_value
 from app.services.admin_api import AdminAPISession
 from app.services.audit import write_audit_log
@@ -211,10 +211,26 @@ async def delete_instance(request: Request, server_id: int, db: AsyncSession = D
     if not server:
         return JSONResponse({"error": "Server not found"}, status_code=404)
 
-    result = await _get_api_for_server(server).delete_instance(instance, body["confirm"])
+    api = _get_api_for_server(server)
+    result = await api.delete_instance(instance, body["confirm"])
+    username = request.session.get("username", "unknown")
+    if result.get("error") == "Instance not found":
+        # Already removed on the server (its own dashboard, the CLI, or a delete
+        # whose job the poller could not confirm). Drop only the stale row, and
+        # only after the server's live list confirms the name is absent.
+        names = await api.get_instances()
+        if isinstance(names, list) and instance not in names:
+            rows = await db.execute(select(Instance).where(Instance.server_id == server_id, Instance.instance_name == instance))
+            for row in rows.scalars().all():
+                await db.delete(row)
+            await write_audit_log(db, actor=username, action="delete_instance", server_id=server_id, instance_name=instance,
+                                  detail={"removed_locally": True, "reason": "not on server"})
+            await db.commit()
+            return JSONResponse({"status": "success", "removed": True,
+                                 "message": f"{instance} no longer exists on the server; removed it from the fleet manager"})
+
     # Audited after the call: the poller finds the job_id here to confirm the
     # delete finished before it drops the instance (see poller._delete_confirmed).
-    username = request.session.get("username", "unknown")
     await write_audit_log(db, actor=username, action="delete_instance", server_id=server_id, instance_name=instance,
                           detail={"job_id": result.get("job_id"), "error": result.get("error")})
     await db.commit()

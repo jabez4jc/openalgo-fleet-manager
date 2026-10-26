@@ -26,12 +26,15 @@ import types
 class FakeResult:
     def __init__(self, obj): self.obj = obj
     def scalar_one_or_none(self): return self.obj
+    def scalars(self): return self
+    def all(self): return [self.obj]
 
 
 class FakeDB:
-    def __init__(self, server): self.server, self.added = server, []
+    def __init__(self, server): self.server, self.added, self.deleted = server, [], []
     async def execute(self, _): return FakeResult(self.server)
     def add(self, obj): self.added.append(obj)
+    async def delete(self, obj): self.deleted.append(obj)
     async def flush(self): pass
     async def commit(self): pass
 
@@ -92,6 +95,20 @@ assert calls == []
 db = FakeDB(FakeServer())
 run(actions_router.delete_instance(FakeRequest({"instance": "openalgo1", "confirm": "openalgo1"}), 1, db))
 assert calls == [("openalgo1", "openalgo1")] and '"abc123"' in db.added[0].detail_json
+
+# Delete of an instance the server no longer has: the stale row goes, but only
+# when the server's live list confirms the name is absent.
+AdminAPISession.delete_instance = fake({"error": "Instance not found", "instance": "openalgo2"})
+def deleting(names):
+    AdminAPISession.get_instances = fake(names)
+    db = FakeDB(FakeServer())
+    return run(actions_router.delete_instance(FakeRequest({"instance": "openalgo2", "confirm": "openalgo2"}), 1, db)), db
+d, db = deleting(["openalgo1"])
+assert d.get("removed") and len(db.deleted) == 1
+d, db = deleting(["openalgo1", "openalgo2"])       # still listed: keep the row, show the error
+assert not d.get("removed") and db.deleted == [] and d["error"] == "Instance not found"
+d, db = deleting({"error": "connection_failed"})   # cannot confirm: keep the row
+assert not d.get("removed") and db.deleted == []
 
 # Poller: removed only for a successful delete-instance job for this very instance.
 def job_api(job):
