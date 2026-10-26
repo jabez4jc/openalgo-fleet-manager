@@ -26,6 +26,13 @@ def _js_arg(value: str | None) -> str:
     return _esc(json.dumps(value or ""), quote=True)
 
 
+def _url_link(url: str | None) -> str:
+    """The server's URL as a new-tab link; plain text unless it is http(s)."""
+    if not (url or "").lower().startswith(("http://", "https://")):
+        return _esc(url)
+    return f'<a href="{_esc(url)}" target="_blank" rel="noopener noreferrer">{_esc(url)}</a>'
+
+
 def _format_dt(value: object, fmt: str, fallback: str = "never") -> str:
     if not value:
         return fallback
@@ -57,7 +64,7 @@ async def servers_list(request: Request, db: AsyncSession = Depends(get_db)):
             ssh_info = f"{srv.ssh_user}@{srv.ssh_host}:{srv.ssh_port}" if srv.ssh_host else "\u2014"
             html += f"""<tr>
 <td style="font-weight:600"><a href="/servers/{srv.id}">{_esc(srv.name)}</a></td>
-<td class="mono">{_esc(srv.base_url)}</td>
+<td class="mono">{_url_link(srv.base_url)}</td>
 <td class="mono">{_esc(ssh_info)}</td>
 <td style="font-weight:600">{inst_count}</td>
 <td style="font-size:12px;color:var(--text-muted)">{_esc(last_seen)}</td>
@@ -174,7 +181,7 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
 </div>
 </div>
 <div class="server-meta">
-<div class="server-meta-item"><span class="server-meta-label">URL</span><span class="server-meta-value">{_esc(server.base_url)}</span></div>
+<div class="server-meta-item"><span class="server-meta-label">URL</span><span class="server-meta-value">{_url_link(server.base_url)}</span></div>
 <div class="server-meta-item"><span class="server-meta-label">Admin</span><span>{_esc(server.admin_username)}</span></div>
 <div class="server-meta-item"><span class="server-meta-label">SSH</span><span>{_esc(ssh_info)}</span></div>
 <div class="server-meta-item"><span class="server-meta-label">Instances</span><span style="font-weight:600">{len(instances)}</span></div>
