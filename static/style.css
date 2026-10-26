@@ -144,7 +144,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .dot.pulse { animation: pulse 2s ease-in-out infinite; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
 
-main { display: flex; max-width: 1500px; margin: 0 auto; padding: 28px 28px 72px; flex-direction: column; gap: 16px; }
+main { display: flex; min-width: 0; padding: 28px 28px 72px; flex-direction: column; gap: 16px; }
 .page-intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
 .eyebrow { margin-bottom: 6px; color: var(--accent); font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
 .page-intro h1 { margin: 0; font-size: 28px; font-weight: 650; line-height: 1.15; letter-spacing: -.02em; }
