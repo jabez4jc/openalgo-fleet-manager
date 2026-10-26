@@ -12,6 +12,7 @@ from app.models import Server, Instance
 from app.encryption import encrypt_value, decrypt_value
 from app.services.audit import write_audit_log
 from app.routers.dashboard_router import BASE_TEMPLATE_START, BASE_TEMPLATE_END
+from app.routers.server_tools_ui import server_tools_html
 
 router = APIRouter(prefix="/servers", tags=["servers"])
 
@@ -230,6 +231,8 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
 <button class="btn btn-sm btn-ghost" onclick="viewLogs({_js_arg(inst.instance_name)})">Logs</button>
 <button class="btn btn-sm btn-ghost" onclick="actionHealthCheck({_js_arg(inst.instance_name)})">Health</button>
 <button class="btn btn-sm" onclick="actionUpdate({_js_arg(inst.instance_name)})">Update</button>
+<button class="btn btn-sm btn-ghost" onclick="actionInvalidateSession({_js_arg(inst.instance_name)})">Invalidate session</button>
+<button class="btn btn-sm btn-danger" onclick="actionFactoryReset({_js_arg(inst.instance_name)})">Factory reset</button>
 </div></td>
 </tr>"""
         html += '</tbody></table></div></div>'
@@ -240,6 +243,8 @@ async def server_detail(request: Request, server_id: int, db: AsyncSession = Dep
 <div class="action-bar">
 <button class="btn btn-sm" onclick="actionRestartAll()">Restart All</button>
 <button class="btn btn-sm btn-success" onclick="actionHealthCheckAll()">Health Check All</button>
+<button class="btn btn-sm btn-success" onclick="actionHealthCheckSystem()">System Health Check</button>
+<button class="btn btn-sm" onclick="actionUpdateScripts()">Update Scripts</button>
 <button class="btn btn-sm" onclick="actionUpdateAll()">Update All</button>
 <button class="btn btn-sm btn-danger" onclick="actionReboot()">Reboot Server</button>
 </div>
@@ -287,20 +292,25 @@ if(result.status&&result.status!=='queued')showToast(title+' - '+result.status,r
 else if(result.error)showToast(title+' - '+result.error,'error');
 }}
 }}
-async function pollJob(jobId,title,logEl){{
+async function pollJob(jobId,title,logEl,misses=0){{
+let d;
 try{{
 const r=await fetch('/api/jobs/'+jobId+'?server_id='+serverId);
-const d=await r.json();
-logEl.textContent=d.output||d.error||JSON.stringify(d);
+d=await r.json();
+}}catch(e){{d={{error:e.message}};}}
+// An update restarts the server's admin API, so polls fail for a while; the
+// job itself survives on disk. Keep polling through that (up to ~3 min).
+if(!d.status){{
+if(misses<60){{if(!misses)logEl.textContent+='\\n(waiting for server: '+(d.error||'no status')+')';setTimeout(()=>pollJob(jobId,title,logEl,misses+1),3000);return;}}
+logEl.textContent+='\\n\\n--- Lost contact with the job ---';showToast(title+' - status unknown','error');return;
+}}
+logEl.textContent=d.output||JSON.stringify(d);
 if(d.status==='running'||d.status==='queued'){{
 setTimeout(()=>pollJob(jobId,title,logEl),2000);
-}}else{{
+return;
+}}
 logEl.textContent+='\\n\\n--- Job '+d.status+' ---';
-}}
-showToast(title+' - '+d.status,d.status==='error'?'error':'success');
-}}catch(e){{
-logEl.textContent='Poll error: '+e.message;
-}}
+showToast(title+' - '+d.status,d.status==='success'?'success':'error');
 }}
 async function actionRestart(inst){{
 if(!confirm('Restart instance '+inst+'?'))return;
@@ -388,6 +398,7 @@ if(d.status==='running'||d.status==='queued')setTimeout(()=>pollProvJob(jobId,sh
 }}
 </script>
 """
+    html += server_tools_html([inst.instance_name for inst in instances])
     html += BASE_TEMPLATE_END
     return HTMLResponse(content=html)
 

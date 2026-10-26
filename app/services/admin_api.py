@@ -121,3 +121,26 @@ class AdminAPISession:
 
     async def health_liveness(self) -> dict:
         return await self._request("GET", "/health")
+
+    async def invalidate_session(self, instance: str) -> dict:
+        return await self._request("POST", "/api/invalidate-session", json_data={"instance": instance})
+
+    async def reset_admin_user(self, instance: str, broker_fields: dict) -> dict:
+        # Synchronous on the server: wipes users, rewrites .env, restarts the instance.
+        return await self._request("POST", "/api/reset-admin-user", json_data={"instance": instance, **broker_fields}, timeout=180)
+
+    async def terminal_run(self, fields: dict) -> dict:
+        return await self._request("POST", "/api/terminal/run", json_data=fields, timeout=60)
+
+    async def terminal_dbs(self, instance: str) -> dict:
+        return await self._request("GET", "/api/terminal/dbs", params={"instance": instance})
+
+    async def get_telegram(self) -> dict:
+        return await self._request("GET", "/api/telegram")
+
+    async def set_telegram(self, token: str, chat_id: str) -> dict:
+        # The server checks the token and sends a test message (up to 150s).
+        return await self._request("POST", "/api/telegram", json_data={"token": token, "chat_id": chat_id}, timeout=160)
+
+    async def change_password(self, current_password: str, new_password: str) -> dict:
+        return await self._request("POST", "/api/change-password", json_data={"current_password": current_password, "new_password": new_password})
